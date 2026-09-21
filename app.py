@@ -3,6 +3,7 @@
 import json
 import sqlite3
 from pathlib import Path
+from typing import Any
 
 import dash
 import pandas as pd
@@ -17,7 +18,7 @@ app = dash.Dash(
 )
 server = app.server
 
-COLORS = {
+COLORS: dict[str, str] = {
     "bg": "#0a0a1a",
     "card": "#12122a",
     "border": "#2a2a4a",
@@ -30,7 +31,7 @@ COLORS = {
 }
 
 
-def _tab_style():
+def _tab_style() -> dict[str, Any]:
     return {
         "style": {
             "backgroundColor": COLORS["card"],
@@ -59,7 +60,7 @@ CAJAS_CSV = BASE / "cajas-alimentacion" / "data" / "raw" / "coordinates.csv"
 SANIT_CSV = BASE / "sanitizacion-santiago" / "data" / "raw" / "sanitization_points.csv"
 
 
-def load_data():
+def load_data() -> dict[str, Any]:
     data = {}
     if WC_DB.exists():
         conn = sqlite3.connect(str(WC_DB))
@@ -83,7 +84,25 @@ def load_data():
     return data
 
 
-DATA = load_data()
+# Lazy load - DATA is loaded on first access via get_data()
+_DATA: dict[str, Any] | None = None
+
+
+def get_data() -> dict[str, Any]:
+    """Get data with lazy loading."""
+    global _DATA
+    if _DATA is None:
+        _# Lazy load - DATA is loaded on first access via get_data()
+_DATA: dict[str, Any] | None = None
+
+
+def get_data() -> dict[str, Any]:
+    """Get data with lazy loading."""
+    global _DATA
+    if _DATA is None:
+        _DATA = load_data()
+    return _DATA
+    return _DATA
 
 # ── Layout ────────────────────────────────────────────────────────────────────
 
@@ -221,9 +240,10 @@ def overview_tab():
 
 
 def worldcup_tab():
-    if "wc_matches" not in DATA:
+    data = get_data()
+    if "wc_matches" not in data:
         return card("World Cup 2026", html.P("Data not available"))
-    df = DATA["wc_matches"]
+    df = data["wc_matches"]
     fig = px.histogram(df, x="home_score", nbins=10, title="Distribución de Goles")
     fig.update_layout(template="plotly_dark", paper_bgcolor=COLORS["card"], height=400)
     return html.Div([
@@ -233,9 +253,10 @@ def worldcup_tab():
 
 
 def games_tab():
-    if "games" not in DATA:
+    data = get_data()
+    if "games" not in data:
         return card("Videojuegos", html.P("Data not available"))
-    df = DATA["games"]
+    df = data["games"]
     fig = px.pie(df, names="source", title="Distribución por Plataforma")
     fig.update_layout(template="plotly_dark", paper_bgcolor=COLORS["card"], height=400)
     return html.Div([
@@ -245,9 +266,10 @@ def games_tab():
 
 
 def nlp_tab():
-    if "speeches" not in DATA:
+    data = get_data()
+    if "speeches" not in data:
         return card("NLP", html.P("Data not available"))
-    df = DATA["speeches"]
+    df = data["speeches"]
     fig = px.scatter(df, x="year", y="speaker", title="Discursos Presidenciales")
     fig.update_layout(template="plotly_dark", paper_bgcolor=COLORS["card"], height=500)
     return html.Div([
@@ -257,9 +279,10 @@ def nlp_tab():
 
 
 def geo_tab():
-    if "census" not in DATA:
+    data = get_data()
+    if "census" not in data:
         return card("Geografía", html.P("Data not available"))
-    df = DATA["census"]
+    df = data["census"]
     fig = px.line(df, x="census_year", y="population", color="region", title="Población por Región")
     fig.update_layout(template="plotly_dark", paper_bgcolor=COLORS["card"], height=600)
     return html.Div([
@@ -269,9 +292,10 @@ def geo_tab():
 
 
 def cajas_tab():
-    if "cajas" not in DATA:
+    data = get_data()
+    if "cajas" not in data:
         return card("Cajas Alimentación", html.P("Data not available"))
-    df = DATA["cajas"]
+    df = data["cajas"]
     fig = px.density_mapbox(
         df, lat="lat", lon="lon", radius=8,
         center={"lat": -33.45, "lon": -70.66}, zoom=11,
@@ -286,9 +310,10 @@ def cajas_tab():
 
 
 def sanit_tab():
-    if "sanit" not in DATA:
+    data = get_data()
+    if "sanit" not in data:
         return card("Sanitización Santiago", html.P("Data not available"))
-    df = DATA["sanit"]
+    df = data["sanit"]
     tipo_counts = df["type"].value_counts()
     fig_map = px.scatter_mapbox(
         df, lat="lat", lon="lon", color="type",
