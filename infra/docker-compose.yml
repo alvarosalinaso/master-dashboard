@@ -1,0 +1,194 @@
+name: analytics-portfolio
+
+networks:
+  analytics-network:
+    driver: bridge
+
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: analytics-nginx
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      master-dashboard:
+        condition: service_healthy
+    networks:
+      - analytics-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  master-dashboard:
+    build:
+      context: ../..
+      dockerfile: master-dashboard/infra/Dockerfile.base
+    container_name: analytics-master
+    working_dir: /app/master-dashboard
+    command: gunicorn app:server --bind 0.0.0.0:8050 --workers 2 --timeout 120
+    environment:
+      - PORT=8050
+      - PYTHONPATH=/app/master-dashboard
+    ports:
+      - "8050:8050"
+    volumes:
+      - ../../master-dashboard:/app/master-dashboard:ro
+    networks:
+      - analytics-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8050/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  worldcup:
+    build:
+      context: ../..
+      dockerfile: master-dashboard/infra/Dockerfile.base
+    container_name: analytics-worldcup
+    working_dir: /app/worldcup-2026
+    command: gunicorn dashboard.app:server --bind 0.0.0.0:8051 --workers 2 --timeout 120
+    environment:
+      - PORT=8051
+      - PYTHONPATH=/app/worldcup-2026
+    ports:
+      - "8051:8051"
+    volumes:
+      - ../../worldcup-2026:/app/worldcup-2026:ro
+    networks:
+      - analytics-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8051/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  videogames:
+    build:
+      context: ../..
+      dockerfile: master-dashboard/infra/Dockerfile.base
+    container_name: analytics-videogames
+    working_dir: /app/chilean-videogames-analysis
+    command: gunicorn dashboard:server --bind 0.0.0.0:8052 --workers 2 --timeout 120
+    environment:
+      - PORT=8052
+      - PYTHONPATH=/app/chilean-videogames-analysis:/app/chilean-videogames-analysis/src
+    ports:
+      - "8052:8052"
+    volumes:
+      - ../../chilean-videogames-analysis:/app/chilean-videogames-analysis:ro
+    networks:
+      - analytics-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8052/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  geopolitica:
+    build:
+      context: ../..
+      dockerfile: master-dashboard/infra/Dockerfile.base
+    container_name: analytics-geopolitica
+    working_dir: /app/geopolitica-textual-nlp
+    command: gunicorn dashboard:server --bind 0.0.0.0:8053 --workers 2 --timeout 120
+    environment:
+      - PORT=8053
+      - PYTHONPATH=/app/geopolitica-textual-nlp:/app/geopolitica-textual-nlp/src
+    ports:
+      - "8053:8053"
+    volumes:
+      - ../../geopolitica-textual-nlp:/app/geopolitica-textual-nlp:ro
+    networks:
+      - analytics-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8053/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+  geografia:
+    build:
+      context: ../..
+      dockerfile: master-dashboard/infra/Dockerfile.base
+    container_name: analytics-geografia
+    working_dir: /app/chile-geografia-historica
+    command: gunicorn dashboard:server --bind 0.0.0.0:8054 --workers 2 --timeout 120
+    environment:
+      - PORT=8054
+      - PYTHONPATH=/app/chile-geografia-historica:/app/chile-geografia-historica/src
+    ports:
+      - "8054:8054"
+    volumes:
+      - ../../chile-geografia-historica:/app/chile-geografia-historica:ro
+    networks:
+      - analytics-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8054/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  cajas:
+    build:
+      context: ../..
+      dockerfile: master-dashboard/infra/Dockerfile.base
+    container_name: analytics-cajas
+    working_dir: /app/cajas-alimentacion
+    command: gunicorn dashboard:server --bind 0.0.0.0:8055 --workers 2 --timeout 120
+    environment:
+      - PORT=8055
+      - PYTHONPATH=/app/cajas-alimentacion:/app/cajas-alimentacion/src
+    ports:
+      - "8055:8055"
+    volumes:
+      - ../../cajas-alimentacion:/app/cajas-alimentacion:ro
+    networks:
+      - analytics-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8055/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  sanitizacion:
+    build:
+      context: ../..
+      dockerfile: master-dashboard/infra/Dockerfile.base
+    container_name: analytics-sanitizacion
+    working_dir: /app/sanitizacion-santiago
+    command: gunicorn dashboard:server --bind 0.0.0.0:8056 --workers 2 --timeout 120
+    environment:
+      - PORT=8056
+      - PYTHONPATH=/app/sanitizacion-santiago
+    ports:
+      - "8056:8056"
+    volumes:
+      - ../../sanitizacion-santiago:/app/sanitizacion-santiago:ro
+    networks:
+      - analytics-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8056/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
