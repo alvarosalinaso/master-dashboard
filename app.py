@@ -441,10 +441,10 @@ def cajas_tab():
     if "cajas" not in data:
         return card("Cajas Alimentación", html.P("Data not available"))
     df = data["cajas"]
-    fig = px.density_mapbox(
+    fig = px.density_map(
         df, lat="lat", lon="lon", radius=8,
         center={"lat": -33.45, "lon": -70.66}, zoom=11,
-        mapbox_style="carto-positron",
+        map_style="carto-positron",
         title="Puntos de Entrega — Cajas de Alimentación",
     )
     fig.update_layout(template="plotly_dark", paper_bgcolor=COLORS["card"], height=600)
@@ -460,11 +460,11 @@ def sanit_tab():
         return card("Sanitización Santiago", html.P("Data not available"))
     df = data["sanit"]
     tipo_counts = df["type"].value_counts()
-    fig_map = px.scatter_mapbox(
+    fig_map = px.scatter_map(
         df, lat="lat", lon="lon", color="type",
         hover_name="name", hover_data=["description", "type"],
         center={"lat": -33.45, "lon": -70.66}, zoom=12,
-        mapbox_style="carto-positron",
+        map_style="carto-positron",
         title="Puntos de Sanitización — Comuna de Santiago",
         color_discrete_map={"Cité": "#e74c3c", "Pasaje": "#3498db", "Edificio": "#2ecc71", "Domicilio": "#f39c12", "Calle": "#9b59b6", "Otro": "#95a5a6"},
     )
