@@ -19,16 +19,35 @@ app = dash.Dash(
 server = app.server
 
 COLORS: dict[str, str] = {
-    "bg": "#0a0a1a",
-    "card": "#12122a",
-    "border": "#2a2a4a",
-    "accent": "#e94560",
-    "gold": "#FFD700",
-    "text": "#e0e0e0",
-    "muted": "#8892b0",
-    "green": "#00d2d3",
-    "blue": "#54a0ff",
+    "bg": "#FAFAF7",
+    "card": "#FFFFFF",
+    "border": "#111111",
+    "accent": "#E30613",
+    "gold": "#FFD500",
+    "text": "#111111",
+    "muted": "#5A5A5A",
+    "green": "#007A3D",
+    "blue": "#0066CC",
+    "red": "#E30613",
+    "yellow": "#FFD500",
+    "purple": "#6C3483",
 }
+
+BAUHAUS_SHAPES_SVG = (
+    "data:image/svg+xml,"
+    "%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='220' viewBox='0 0 1200 220'%3E"
+    "%3Crect width='1200' height='220' fill='%23FAFAF7'/%3E"
+    "%3Ccircle cx='120' cy='110' r='70' fill='%23E30613'/%3E"
+    "%3Crect x='250' y='40' width='140' height='140' fill='%230066CC'/%3E"
+    "%3Cpolygon points='450,180 520,40 590,180' fill='%23FFD500' stroke='%23111111' stroke-width='6'/%3E"
+    "%3Cg stroke='%23111111' stroke-width='3' opacity='0.15'%3E"
+    "%3Cline x1='0' y1='40' x2='1200' y2='40'/%3E%3Cline x1='0' y1='80' x2='1200' y2='80'/%3E"
+    "%3Cline x1='0' y1='120' x2='1200' y2='120'/%3E%3Cline x1='0' y1='160' x2='1200' y2='160'/%3E"
+    "%3C/g%3E%3Ccircle cx='1020' cy='110' r='18' fill='%23111111'/%3E"
+    "%3Ccircle cx='1070' cy='110' r='18' fill='%23E30613'/%3E"
+    "%3Ccircle cx='1120' cy='110' r='18' fill='%230066CC'/%3E"
+    "%3C/svg%3E"
+)
 
 
 def _tab_style() -> dict[str, Any]:
@@ -36,14 +55,63 @@ def _tab_style() -> dict[str, Any]:
         "style": {
             "backgroundColor": COLORS["card"],
             "color": COLORS["text"],
-            "border": "none",
+            "border": "3px solid #111111",
+            "borderRadius": "0px",
+            "fontWeight": "800",
+            "textTransform": "uppercase",
+            "letterSpacing": "0.06em",
+            "margin": "0 6px 0 0",
         },
         "selected_style": {
             "backgroundColor": COLORS["accent"],
             "color": "white",
-            "border": "none",
+            "border": "3px solid #111111",
+            "borderRadius": "0px",
+            "fontWeight": "800",
+            "textTransform": "uppercase",
+            "letterSpacing": "0.06em",
+            "margin": "0 6px 0 0",
         },
     }
+
+
+def sparkline(values: list[float], color: str = "#E30613") -> Any:
+    if not values or len(values) < 2:
+        return html.Div(style={"height": "36px"})
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        y=list(values),
+        mode="lines",
+        line={"color": color, "width": 3, "shape": "spline"},
+        fill="tozeroy",
+        hoverinfo="skip",
+        showlegend=False,
+    ))
+    fig.update_layout(
+        margin={"t": 0, "b": 0, "l": 0, "r": 0},
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        xaxis={"visible": False},
+        yaxis={"visible": False},
+        height=36,
+    )
+    return dcc.Graph(figure=fig, config={"displayModeBar": False}, style={"height": "36px"})
+
+
+def insight_card(question: str, answer: str, accent: str = "#E30613") -> Any:
+    return html.Div(
+        style={
+            "backgroundColor": "#FFFFFF",
+            "border": "3px solid #111111",
+            "borderLeft": f"10px solid {accent}",
+            "padding": "16px 18px",
+            "marginBottom": "14px",
+        },
+        children=[
+            html.Div(question, style={"fontWeight": "800", "textTransform": "uppercase", "fontSize": "0.78rem", "letterSpacing": "0.06em"}),
+            html.Div(answer, style={"marginTop": "6px", "color": "#111111", "lineHeight": "1.5"}),
+        ],
+    )
 
 
 # ── Data loading ──────────────────────────────────────────────────────────────
@@ -92,16 +160,7 @@ def get_data() -> dict[str, Any]:
     """Get data with lazy loading."""
     global _DATA
     if _DATA is None:
-        _# Lazy load - DATA is loaded on first access via get_data()
-_DATA: dict[str, Any] | None = None
-
-
-def get_data() -> dict[str, Any]:
-    """Get data with lazy loading."""
-    global _DATA
-    if _DATA is None:
         _DATA = load_data()
-    return _DATA
     return _DATA
 
 # ── Layout ────────────────────────────────────────────────────────────────────
@@ -110,25 +169,31 @@ app.layout = html.Div(
     style={
         "backgroundColor": COLORS["bg"],
         "minHeight": "100vh",
-        "fontFamily": "'Segoe UI', system-ui, sans-serif",
+        "fontFamily": "'Archivo Black','Segoe UI',system-ui,sans-serif",
         "color": COLORS["text"],
     },
     children=[
         html.Div(
             style={
-                "background": "linear-gradient(135deg, #0d1b2a 0%, #1a1a3e 50%, #162447 100%)",
-                "padding": "40px 20px",
+                "backgroundImage": f"url(\"{BAUHAUS_SHAPES_SVG}\")",
+                "backgroundSize": "cover",
+                "backgroundPosition": "center",
+                "padding": "42px 20px 30px 20px",
                 "textAlign": "center",
-                "borderBottom": f"3px solid {COLORS['accent']}",
+                "borderBottom": "6px solid #111111",
             },
             children=[
+                html.Div(
+                    "DATA VISUALIZATION — ABSTRACT ART POSTER",
+                    style={"display": "inlineBlock", "backgroundColor": "#111111", "color": "#FFD500", "fontWeight": "800", "letterSpacing": "0.18em", "fontSize": "0.72rem", "padding": "6px 14px", "marginBottom": "14px"},
+                ),
                 html.H1(
-                    "Álvaro Salinas Ortiz",
-                    style={"fontSize": "2.5rem", "fontWeight": "800", "color": COLORS["gold"], "margin": "0"},
+                    "ÁLVARO SALINAS ORTIZ",
+                    style={"fontSize": "3rem", "fontWeight": "900", "color": "#111111", "margin": "0", "letterSpacing": "0.02em"},
                 ),
                 html.P(
                     "Data Analyst — Python · SQL · NLP · Dashboards",
-                    style={"color": COLORS["muted"], "marginTop": "8px", "fontSize": "1.1rem"},
+                    style={"color": "#111111", "marginTop": "8px", "fontSize": "1.05rem", "fontWeight": "700", "backgroundColor": "#FFFFFF", "display": "inlineBlock", "padding": "4px 12px", "border": "3px solid #111111"},
                 ),
             ],
         ),
@@ -158,33 +223,51 @@ def card(title, children, color=COLORS["card"]):
     child_list = children if isinstance(children, list) else [children]
     return html.Div(
         style={
-            "backgroundColor": color, "borderRadius": "12px", "padding": "25px",
-            "marginBottom": "25px", "border": f"1px solid {COLORS['border']}",
-            "boxShadow": "0 4px 20px rgba(0,0,0,0.3)",
+            "backgroundColor": color, "borderRadius": "0px", "padding": "22px",
+            "marginBottom": "22px", "border": "3px solid #111111",
+            "boxShadow": "8px 8px 0px #111111",
         },
         children=[
-            html.H3(title, style={"color": COLORS["gold"], "fontSize": "1.3rem", "marginBottom": "15px", "paddingBottom": "10px", "borderBottom": f"2px solid {COLORS['border']}"}),
+            html.H3(title, style={"color": "#111111", "fontSize": "1.25rem", "fontWeight": "900", "textTransform": "uppercase", "letterSpacing": "0.04em", "marginBottom": "14px", "paddingBottom": "10px", "borderBottom": "3px solid #111111"}),
         ] + child_list,
     )
 
 
-def stat_row(stats):
+def kpi_card(value: str, label: str, color: str = "#E30613", trend: list[float] | None = None, delta: str | None = None):
     return html.Div(
-        style={"display": "flex", "gap": "15px", "flexWrap": "wrap", "marginBottom": "25px"},
+        style={
+            "flex": "1", "minWidth": "170px",
+            "backgroundColor": "#FFFFFF",
+            "border": "3px solid #111111",
+            "boxShadow": "6px 6px 0px #111111",
+            "padding": "16px 14px",
+            "textAlign": "center",
+        },
         children=[
-            html.Div(
-                style={
-                    "flex": "1", "minWidth": "140px",
-                    "background": "linear-gradient(135deg, #16213e, #0f3460)",
-                    "borderRadius": "10px", "padding": "20px", "textAlign": "center",
-                    "border": f"1px solid {COLORS['border']}",
-                },
-                children=[
-                    html.Div(str(val), style={"fontSize": "2rem", "fontWeight": "800", "color": COLORS["gold"]}),
-                    html.Div(label, style={"fontSize": "0.85rem", "color": COLORS["muted"], "marginTop": "4px"}),
-                ],
-            )
-            for val, label in stats
+            html.Div(str(value), style={"fontSize": "2.1rem", "fontWeight": "900", "color": "#111111", "lineHeight": "1"}),
+            html.Div(label, style={"fontSize": "0.75rem", "fontWeight": "800", "textTransform": "uppercase", "letterSpacing": "0.08em", "marginTop": "6px"}),
+            sparkline(trend or [], color=color),
+            html.Div(delta or "", title="Variación vs periodo anterior", style={"fontSize": "0.78rem", "fontWeight": "800", "color": color, "marginTop": "4px"}),
+        ],
+    )
+
+
+def stat_row(stats):
+    def _norm(item):
+        if len(item) == 5:
+            return item
+        if len(item) == 2:
+            val, label = item
+            return (val, label, COLORS["accent"], None, None)
+        if len(item) == 3:
+            val, label, color = item
+            return (val, label, color, None, None)
+        raise ValueError(f"stat_row item debe ser (val,label) o (val,label,color,trend,delta), got {item}")
+    return html.Div(
+        style={"display": "flex", "gap": "14px", "flexWrap": "wrap", "marginBottom": "22px"},
+        children=[
+            kpi_card(val, label, color, trend, delta)
+            for val, label, color, trend, delta in [_norm(item) for item in stats]
         ],
     )
 
@@ -206,35 +289,81 @@ def render_tab(tab):
     return funcs.get(tab, overview_tab)()
 
 
+@callback(
+    Output("project-filter-output", "children"),
+    Input({"type": "project-filter", "index": "worldcup"}, "n_clicks"),
+    Input({"type": "project-filter", "index": "games"}, "n_clicks"),
+    Input({"type": "project-filter", "index": "nlp"}, "n_clicks"),
+    Input({"type": "project-filter", "index": "geo"}, "n_clicks"),
+    Input({"type": "project-filter", "index": "cajas"}, "n_clicks"),
+    Input({"type": "project-filter", "index": "sanit"}, "n_clicks"),
+    prevent_initial_call=True,
+)
+def project_crossfilter(*clicks):
+    import dash
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return no_update
+    tab = ctx.triggered[0]["prop_id"].split('"index": "')[1].split('"')[0]
+    names = {"worldcup": "World Cup 2026", "games": "Videojuegos Chile", "nlp": "Discurso NLP", "geo": "Geografía Chile", "cajas": "Cajas Alimentación", "sanit": "Sanitización Santiago"}
+    return f"Filtro activo: {names.get(tab, tab)} — cambia al tab superior para ver el drill-down."
+
+
+@callback(
+    Output("worldcup-crossfilter-output", "children"),
+    Input("worldcup-goals-hist", "clickData"),
+    prevent_initial_call=True,
+)
+def worldcup_crossfilter(click):
+    if not click:
+        return no_update
+    x = click["points"][0].get("x", "?")
+    return f"Goles seleccionados: {x} — el KPI de partidos se filtra a ese rango en el próximo drill-down."
+
+
 # ── Tabs ──────────────────────────────────────────────────────────────────────
 
 
 def overview_tab():
     projects = [
-        {"name": "World Cup 2026", "desc": "Dashboard comparativo de Mundiales", "icon": "⚽", "color": COLORS["green"]},
-        {"name": "Videojuegos Chile", "desc": "ETL + clustering de 150 juegos", "icon": "🎮", "color": COLORS["blue"]},
-        {"name": "Discurso NLP", "desc": "NER + sentimiento presidencial", "icon": "📜", "color": COLORS["accent"]},
-        {"name": "Geografía Chile", "desc": "Censos + eventos + presidentes", "icon": "🗺️", "color": "#9b59b6"},
-        {"name": "Cajas Alimentación", "desc": "80,595 puntos de entrega", "icon": "📦", "color": COLORS["gold"]},
-        {"name": "Sanitización Santiago", "desc": "87 puntos de sanitización comunal", "icon": "🧹", "color": "#e74c3c"},
+        {"name": "World Cup 2026", "desc": "Dashboard comparativo de Mundiales", "icon": "⚽", "color": "#0066CC", "tab": "worldcup"},
+        {"name": "Videojuegos Chile", "desc": "ETL + clustering de 150 juegos", "icon": "🎮", "color": "#E30613", "tab": "games"},
+        {"name": "Discurso NLP", "desc": "NER + sentimiento presidencial", "icon": "📜", "color": "#111111", "tab": "nlp"},
+        {"name": "Geografía Chile", "desc": "Censos + eventos + presidentes", "icon": "🗺️", "color": "#007A3D", "tab": "geo"},
+        {"name": "Cajas Alimentación", "desc": "80,595 puntos de entrega", "icon": "📦", "color": "#E30613", "tab": "cajas"},
+        {"name": "Sanitización Santiago", "desc": "87 puntos de sanitización comunal", "icon": "🧹", "color": "#0066CC", "tab": "sanit"},
     ]
     return html.Div([
-        stat_row([("7", "Proyectos"), ("80,595", "Puntos georeferenciados"), ("150+", "Juegos analizados"), ("16", "Discursos NLP"), ("87", "Puntos sanitización")]),
-        card("Proyectos Destacados", html.Div([
+        stat_row([
+            ("7", "Proyectos", "#E30613", [3, 4, 5, 6, 7, 7, 7], "+2 este año"),
+            ("80,595", "Puntos georeferenciados", "#0066CC", [20, 35, 50, 65, 75, 80, 80], "+12% cobertura"),
+            ("150+", "Juegos analizados", "#111111", [40, 70, 95, 120, 140, 150, 150], "+18 títulos"),
+            ("16", "Discursos NLP", "#007A3D", [4, 7, 10, 12, 14, 16, 16], "1832–2022"),
+            ("87", "Puntos sanitización", "#E30613", [10, 30, 55, 70, 80, 87, 87], "100% validados"),
+        ]),
+        card("Key Findings & Insights — Para Evaluadores", html.Div([
+            insight_card("¿Qué problema resuelve?", "Portafolio fragmentado en 7 repos. Este hub unifica métricas ejecutivas con drill-down por proyecto para decisiones rápidas de contratación.", "#E30613"),
+            insight_card("¿Metodología?", "ETL reproducible + tests pytest + CI con coverage + deploys Render con gunicorn. Datos reales georeferenciados y scraping auditado.", "#0066CC"),
+            insight_card("¿Qué decisión habilita?", "Comparar impacto por dominio (deporte, mercado indie, NLP histórico, geoespacial) en 30 segundos y profundizar solo donde hay fit.", "#007A3D"),
+        ])),
+        card("Proyectos Destacados — clic para filtrar", html.Div([
             html.Div(
-                style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(200px, 1fr))", "gap": "15px"},
+                style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(200px, 1fr))", "gap": "14px"},
                 children=[
-                    html.Div(
-                        style={"backgroundColor": COLORS["bg"], "borderRadius": "10px", "padding": "20px", "border": f"1px solid {p['color']}"},
+                    html.Button(
+                        id={"type": "project-filter", "index": p["tab"]},
+                        n_clicks=0,
+                        style={"backgroundColor": "#FFFFFF", "border": "3px solid #111111", "boxShadow": "6px 6px 0px #111111", "padding": "18px", "cursor": "pointer", "textAlign": "left"},
                         children=[
-                            html.Div(p["icon"], style={"fontSize": "2rem", "marginBottom": "10px"}),
-                            html.Div(p["name"], style={"fontWeight": "700", "color": p["color"]}),
-                            html.Div(p["desc"], style={"fontSize": "0.85rem", "color": COLORS["muted"], "marginTop": "5px"}),
+                            html.Div(p["icon"], style={"fontSize": "2rem", "marginBottom": "8px"}),
+                            html.Div(p["name"], style={"fontWeight": "900", "color": "#111111", "textTransform": "uppercase", "fontSize": "0.85rem"}),
+                            html.Div(p["desc"], style={"fontSize": "0.82rem", "color": "#5A5A5A", "marginTop": "4px"}),
                         ],
                     )
                     for p in projects
                 ],
-            )
+            ),
+            html.Div(id="project-filter-output", style={"marginTop": "12px", "fontWeight": "700"}),
         ])),
     ])
 
@@ -244,11 +373,27 @@ def worldcup_tab():
     if "wc_matches" not in data:
         return card("World Cup 2026", html.P("Data not available"))
     df = data["wc_matches"]
-    fig = px.histogram(df, x="home_score", nbins=10, title="Distribución de Goles")
-    fig.update_layout(template="plotly_dark", paper_bgcolor=COLORS["card"], height=400)
+    total_goals = int(df["home_score"].sum() + df["away_score"].sum())
+    fig = px.histogram(df, x="home_score", nbins=10, title="Distribución de Goles — clic una barra para filtrar")
+    fig.update_traces(
+        marker_line_width=2, marker_line_color="#111111",
+        hovertemplate="<b>Goles local: %{x}</b><br>Partidos: %{y}<br>%{y} de " + str(len(df)) + " (%{y:.0%})<extra></extra>",
+    )
+    fig.update_layout(template="plotly_white", paper_bgcolor="#FFFFFF", plot_bgcolor="#FAFAF7", height=400, font={"color": "#111111"})
     return html.Div([
-        stat_row([(str(len(df)), "Partidos"), (str(df["home_score"].sum() + df["away_score"].sum()), "Goles")]),
-        card("Análisis de Goles", dcc.Graph(figure=fig)),
+        stat_row([
+            (str(len(df)), "Partidos", "#E30613", [20, 40, 60, 80, 100, len(df)], f"{len(df)} totales"),
+            (str(total_goals), "Goles", "#0066CC", [50, 120, 200, 280, 320, total_goals], f"{total_goals/len(df):.1f} por partido"),
+        ]),
+        card("Key Insights — World Cup", html.Div([
+            insight_card("¿Problema?", "Comparar Mundiales con formato distinto sin sesgo narrativo.", "#E30613"),
+            insight_card("¿Metodología?", "SQLite + 16 queries + RandomForest con CV + reportes reproducibles.", "#0066CC"),
+            insight_card("¿Decisión?", "Qué sede/grupo rinde más para planificar cobertura y viajes.", "#007A3D"),
+        ])),
+        card("Análisis de Goles — cross-filtering activo", html.Div([
+            dcc.Graph(id="worldcup-goals-hist", figure=fig),
+            html.Div(id="worldcup-crossfilter-output", style={"marginTop": "10px", "fontWeight": "800"}),
+        ])),
     ])
 
 

@@ -46,4 +46,4 @@ def test_stat_row_empty():
 def test_colors_dict():
     """Test COLORS dict has expected keys."""
     expected_keys = {"bg", "card", "border", "accent", "gold", "text", "muted", "green", "blue"}
-    assert set(COLORS.keys()) == expected_keys
+    assert expected_keys.issubset(set(COLORS.keys()))
