@@ -18,64 +18,81 @@ app = dash.Dash(
 )
 server = app.server
 
+FONT_UI = "'Inter','Segoe UI',system-ui,sans-serif"
+FONT_DATA = "'JetBrains Mono',Consolas,'Courier New',monospace"
+
 COLORS: dict[str, str] = {
-    "bg": "#FAFAF7",
-    "card": "#FFFFFF",
-    "border": "#111111",
-    "accent": "#E30613",
-    "gold": "#FFD500",
-    "text": "#111111",
-    "muted": "#5A5A5A",
-    "green": "#007A3D",
-    "blue": "#0066CC",
-    "red": "#E30613",
-    "yellow": "#FFD500",
-    "purple": "#6C3483",
+    "bg": "#0a0e14",
+    "card": "#11161f",
+    "border": "rgba(255,255,255,0.08)",
+    "accent": "#22d3ee",
+    "gold": "#fbbf24",
+    "text": "#e8edf2",
+    "muted": "#8b94a3",
+    "green": "#34d399",
+    "blue": "#54a0ff",
+    "red": "#f472b6",
+    "yellow": "#fbbf24",
+    "purple": "#a78bfa",
+    "grid": "rgba(255,255,255,0.06)",
 }
 
-BAUHAUS_SHAPES_SVG = (
+DATA_CANVAS_SVG = (
     "data:image/svg+xml,"
-    "%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='220' viewBox='0 0 1200 220'%3E"
-    "%3Crect width='1200' height='220' fill='%23FAFAF7'/%3E"
-    "%3Ccircle cx='120' cy='110' r='70' fill='%23E30613'/%3E"
-    "%3Crect x='250' y='40' width='140' height='140' fill='%230066CC'/%3E"
-    "%3Cpolygon points='450,180 520,40 590,180' fill='%23FFD500' stroke='%23111111' stroke-width='6'/%3E"
-    "%3Cg stroke='%23111111' stroke-width='3' opacity='0.15'%3E"
-    "%3Cline x1='0' y1='40' x2='1200' y2='40'/%3E%3Cline x1='0' y1='80' x2='1200' y2='80'/%3E"
-    "%3Cline x1='0' y1='120' x2='1200' y2='120'/%3E%3Cline x1='0' y1='160' x2='1200' y2='160'/%3E"
-    "%3C/g%3E%3Ccircle cx='1020' cy='110' r='18' fill='%23111111'/%3E"
-    "%3Ccircle cx='1070' cy='110' r='18' fill='%23E30613'/%3E"
-    "%3Ccircle cx='1120' cy='110' r='18' fill='%230066CC'/%3E"
-    "%3C/svg%3E"
+    "%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='240' viewBox='0 0 1200 240'%3E"
+    "%3Crect width='1200' height='240' fill='%230a0e14'/%3E"
+    "%3Cg fill='%2322d3ee' opacity='0.16'%3E"
+    + "".join(f"%3Ccircle cx='{x}' cy='{y}' r='2'/%3E" for x in range(30, 1200, 60) for y in range(20, 240, 44)) +
+    "%3C/g%3E%3Cg fill='none' stroke='%2322d3ee' stroke-width='1.5' opacity='0.35'%3E"
+    "%3Cellipse cx='850' cy='120' rx='180' ry='80'/%3E%3Cellipse cx='850' cy='120' rx='130' ry='58'/%3E%3Cellipse cx='850' cy='120' rx='80' ry='36'/%3E"
+    "%3C/g%3E%3Cg fill='none' stroke='%23f472b6' stroke-width='2' opacity='0.8'%3E"
+    "%3Cpath d='M0,190 Q200,120 400,150 T800,90 T1200,130'/%3E%3C/g%3E"
+    "%3Cg fill='%23fbbf24' opacity='0.9'%3E"
+    "%3Ccircle cx='120' cy='70' r='5'/%3E%3Ccircle cx='340' cy='150' r='4'/%3E%3Ccircle cx='620' cy='60' r='6'/%3E"
+    "%3Ccircle cx='880' cy='140' r='4'/%3E%3Ccircle cx='1060' cy='80' r='5'/%3E"
+    "%3C/g%3E%3C/svg%3E"
+)
+
+CHART_TEMPLATE = dict(
+    template="plotly_dark",
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor="rgba(0,0,0,0)",
+    font=dict(family="Inter,Segoe UI,sans-serif", color="#e8edf2", size=13),
+    xaxis=dict(gridcolor="rgba(255,255,255,0.06)", zerolinecolor="rgba(255,255,255,0.12)",
+               title=dict(font=dict(size=13)), tickfont=dict(family="JetBrains Mono,monospace", size=12)),
+    yaxis=dict(gridcolor="rgba(255,255,255,0.06)", zerolinecolor="rgba(255,255,255,0.12)",
+               title=dict(font=dict(size=13)), tickfont=dict(family="JetBrains Mono,monospace", size=12)),
+    legend=dict(font=dict(size=12), bgcolor="rgba(0,0,0,0)"),
+    colorway=["#22d3ee", "#f472b6", "#fbbf24", "#34d399", "#a78bfa", "#54a0ff"],
 )
 
 
 def _tab_style() -> dict[str, Any]:
     return {
         "style": {
-            "backgroundColor": COLORS["card"],
-            "color": COLORS["text"],
-            "border": "3px solid #111111",
-            "borderRadius": "0px",
-            "fontWeight": "800",
-            "textTransform": "uppercase",
-            "letterSpacing": "0.06em",
-            "margin": "0 6px 0 0",
+            "backgroundColor": "transparent",
+            "color": "#8b94a3",
+            "border": "none",
+            "borderBottom": "2px solid transparent",
+            "fontWeight": "600",
+            "fontSize": "0.85rem",
+            "letterSpacing": "0.04em",
+            "padding": "14px 20px",
         },
         "selected_style": {
-            "backgroundColor": COLORS["accent"],
-            "color": "white",
-            "border": "3px solid #111111",
-            "borderRadius": "0px",
-            "fontWeight": "800",
-            "textTransform": "uppercase",
-            "letterSpacing": "0.06em",
-            "margin": "0 6px 0 0",
+            "backgroundColor": "transparent",
+            "color": "#e8edf2",
+            "border": "none",
+            "borderBottom": "2px solid #22d3ee",
+            "fontWeight": "700",
+            "fontSize": "0.85rem",
+            "letterSpacing": "0.04em",
+            "padding": "14px 20px",
         },
     }
 
 
-def sparkline(values: list[float], color: str = "#E30613") -> Any:
+def sparkline(values: list[float], color: str = "#22d3ee") -> Any:
     if not values or len(values) < 2:
         return html.Div(style={"height": "36px"})
     fig = go.Figure()
@@ -98,18 +115,39 @@ def sparkline(values: list[float], color: str = "#E30613") -> Any:
     return dcc.Graph(figure=fig, config={"displayModeBar": False}, style={"height": "36px"})
 
 
-def insight_card(question: str, answer: str, accent: str = "#E30613") -> Any:
+def insight_card(question: str, answer: str, accent: str = "#22d3ee") -> Any:
     return html.Div(
         style={
-            "backgroundColor": "#FFFFFF",
-            "border": "3px solid #111111",
-            "borderLeft": f"10px solid {accent}",
+            "backgroundColor": "#11161f",
+            "border": "1px solid rgba(255,255,255,0.08)",
+            "borderLeft": f"3px solid {accent}",
+            "borderRadius": "10px",
             "padding": "16px 18px",
-            "marginBottom": "14px",
+            "marginBottom": "12px",
         },
         children=[
-            html.Div(question, style={"fontWeight": "800", "textTransform": "uppercase", "fontSize": "0.78rem", "letterSpacing": "0.06em"}),
-            html.Div(answer, style={"marginTop": "6px", "color": "#111111", "lineHeight": "1.5"}),
+            html.Div(question, style={"fontWeight": "700", "fontSize": "0.75rem", "letterSpacing": "0.08em", "textTransform": "uppercase", "color": accent, "fontFamily": FONT_UI}),
+            html.Div(answer, style={"marginTop": "6px", "color": "#e8edf2", "lineHeight": "1.55", "fontSize": "0.95rem"}),
+        ],
+    )
+
+
+def chart_card(title: str, figure, source: str = "", height: int = 420) -> Any:
+    """Chart as hero: title + source line (magazine pattern)."""
+    figure.update_layout(height=height)
+    return html.Div(
+        style={
+            "backgroundColor": "#11161f",
+            "border": "1px solid rgba(255,255,255,0.08)",
+            "borderRadius": "14px",
+            "padding": "22px 22px 14px 22px",
+            "marginBottom": "22px",
+            "boxShadow": "0 8px 32px rgba(0,0,0,0.35)",
+        },
+        children=[
+            html.H3(title, style={"color": "#e8edf2", "fontSize": "1.15rem", "fontWeight": "700", "margin": "0 0 4px 0", "fontFamily": FONT_UI}),
+            html.Div(f"Fuente: {source}" if source else "", style={"color": "#8b94a3", "fontSize": "0.78rem", "fontFamily": FONT_DATA, "marginBottom": "10px"}),
+            dcc.Graph(figure=figure, config={"displayModeBar": False}),
         ],
     )
 
@@ -169,31 +207,31 @@ app.layout = html.Div(
     style={
         "backgroundColor": COLORS["bg"],
         "minHeight": "100vh",
-        "fontFamily": "'Archivo Black','Segoe UI',system-ui,sans-serif",
+        "fontFamily": FONT_UI,
         "color": COLORS["text"],
     },
     children=[
         html.Div(
             style={
-                "backgroundImage": f"url(\"{BAUHAUS_SHAPES_SVG}\")",
+                "backgroundImage": f"url(\"{DATA_CANVAS_SVG}\")",
                 "backgroundSize": "cover",
                 "backgroundPosition": "center",
-                "padding": "42px 20px 30px 20px",
+                "padding": "56px 20px 44px 20px",
                 "textAlign": "center",
-                "borderBottom": "6px solid #111111",
+                "borderBottom": "1px solid rgba(255,255,255,0.08)",
             },
             children=[
                 html.Div(
-                    "DATA VISUALIZATION — ABSTRACT ART POSTER",
-                    style={"display": "inlineBlock", "backgroundColor": "#111111", "color": "#FFD500", "fontWeight": "800", "letterSpacing": "0.18em", "fontSize": "0.72rem", "padding": "6px 14px", "marginBottom": "14px"},
+                    "PORTFOLIO · DATA ART",
+                    style={"display": "inlineBlock", "color": "#22d3ee", "fontWeight": "700", "letterSpacing": "0.28em", "fontSize": "0.72rem", "fontFamily": FONT_DATA, "padding": "6px 0", "marginBottom": "12px", "borderBottom": "1px solid rgba(34,211,238,0.4)"},
                 ),
                 html.H1(
-                    "ÁLVARO SALINAS ORTIZ",
-                    style={"fontSize": "3rem", "fontWeight": "900", "color": "#111111", "margin": "0", "letterSpacing": "0.02em"},
+                    "Álvaro Salinas Ortiz",
+                    style={"fontSize": "2.6rem", "fontWeight": "800", "color": "#e8edf2", "margin": "0", "letterSpacing": "-0.01em"},
                 ),
                 html.P(
                     "Data Analyst — Python · SQL · NLP · Dashboards",
-                    style={"color": "#111111", "marginTop": "8px", "fontSize": "1.05rem", "fontWeight": "700", "backgroundColor": "#FFFFFF", "display": "inlineBlock", "padding": "4px 12px", "border": "3px solid #111111"},
+                    style={"color": "#8b94a3", "marginTop": "10px", "fontSize": "1rem", "fontFamily": FONT_DATA},
                 ),
             ],
         ),
@@ -223,31 +261,32 @@ def card(title, children, color=COLORS["card"]):
     child_list = children if isinstance(children, list) else [children]
     return html.Div(
         style={
-            "backgroundColor": color, "borderRadius": "0px", "padding": "22px",
-            "marginBottom": "22px", "border": "3px solid #111111",
-            "boxShadow": "8px 8px 0px #111111",
+            "backgroundColor": color, "borderRadius": "14px", "padding": "22px",
+            "marginBottom": "22px", "border": "1px solid rgba(255,255,255,0.08)",
+            "boxShadow": "0 8px 32px rgba(0,0,0,0.35)",
         },
         children=[
-            html.H3(title, style={"color": "#111111", "fontSize": "1.25rem", "fontWeight": "900", "textTransform": "uppercase", "letterSpacing": "0.04em", "marginBottom": "14px", "paddingBottom": "10px", "borderBottom": "3px solid #111111"}),
+            html.H3(title, style={"color": "#e8edf2", "fontSize": "1.15rem", "fontWeight": "700", "margin": "0 0 4px 0", "fontFamily": FONT_UI}),
+            html.Div("insights · metodología · decisión", style={"color": "#8b94a3", "fontSize": "0.75rem", "fontFamily": FONT_DATA, "marginBottom": "12px"}),
         ] + child_list,
     )
 
 
-def kpi_card(value: str, label: str, color: str = "#E30613", trend: list[float] | None = None, delta: str | None = None):
+def kpi_card(value: str, label: str, color: str = "#22d3ee", trend: list[float] | None = None, delta: str | None = None):
     return html.Div(
         style={
             "flex": "1", "minWidth": "170px",
-            "backgroundColor": "#FFFFFF",
-            "border": "3px solid #111111",
-            "boxShadow": "6px 6px 0px #111111",
-            "padding": "16px 14px",
+            "backgroundColor": "#11161f",
+            "border": "1px solid rgba(255,255,255,0.08)",
+            "borderRadius": "12px",
+            "padding": "18px 14px",
             "textAlign": "center",
         },
         children=[
-            html.Div(str(value), style={"fontSize": "2.1rem", "fontWeight": "900", "color": "#111111", "lineHeight": "1"}),
-            html.Div(label, style={"fontSize": "0.75rem", "fontWeight": "800", "textTransform": "uppercase", "letterSpacing": "0.08em", "marginTop": "6px"}),
+            html.Div(str(value), style={"fontSize": "2rem", "fontWeight": "800", "color": "#e8edf2", "lineHeight": "1", "fontFamily": FONT_DATA}),
+            html.Div(label, style={"fontSize": "0.78rem", "color": "#8b94a3", "marginTop": "6px", "fontFamily": FONT_UI}),
             sparkline(trend or [], color=color),
-            html.Div(delta or "", title="Variación vs periodo anterior", style={"fontSize": "0.78rem", "fontWeight": "800", "color": color, "marginTop": "4px"}),
+            html.Div(delta or "", title="Variación vs periodo anterior", style={"fontSize": "0.78rem", "fontWeight": "700", "color": color, "marginTop": "4px", "fontFamily": FONT_DATA}),
         ],
     )
 
@@ -326,25 +365,25 @@ def worldcup_crossfilter(click):
 
 def overview_tab():
     projects = [
-        {"name": "World Cup 2026", "desc": "Dashboard comparativo de Mundiales", "icon": "⚽", "color": "#0066CC", "tab": "worldcup"},
-        {"name": "Videojuegos Chile", "desc": "ETL + clustering de 150 juegos", "icon": "🎮", "color": "#E30613", "tab": "games"},
-        {"name": "Discurso NLP", "desc": "NER + sentimiento presidencial", "icon": "📜", "color": "#111111", "tab": "nlp"},
-        {"name": "Geografía Chile", "desc": "Censos + eventos + presidentes", "icon": "🗺️", "color": "#007A3D", "tab": "geo"},
-        {"name": "Cajas Alimentación", "desc": "80,595 puntos de entrega", "icon": "📦", "color": "#E30613", "tab": "cajas"},
-        {"name": "Sanitización Santiago", "desc": "87 puntos de sanitización comunal", "icon": "🧹", "color": "#0066CC", "tab": "sanit"},
+        {"name": "World Cup 2026", "desc": "Dashboard comparativo de Mundiales", "icon": "⚽", "color": "#22d3ee", "tab": "worldcup"},
+        {"name": "Videojuegos Chile", "desc": "ETL + clustering de 150 juegos", "icon": "🎮", "color": "#f472b6", "tab": "games"},
+        {"name": "Discurso NLP", "desc": "NER + sentimiento presidencial", "icon": "📜", "color": "#fbbf24", "tab": "nlp"},
+        {"name": "Geografía Chile", "desc": "Censos + eventos + presidentes", "icon": "🗺️", "color": "#34d399", "tab": "geo"},
+        {"name": "Cajas Alimentación", "desc": "80,595 puntos de entrega", "icon": "📦", "color": "#a78bfa", "tab": "cajas"},
+        {"name": "Sanitización Santiago", "desc": "87 puntos de sanitización comunal", "icon": "🧹", "color": "#54a0ff", "tab": "sanit"},
     ]
     return html.Div([
         stat_row([
-            ("7", "Proyectos", "#E30613", [3, 4, 5, 6, 7, 7, 7], "+2 este año"),
-            ("80,595", "Puntos georeferenciados", "#0066CC", [20, 35, 50, 65, 75, 80, 80], "+12% cobertura"),
-            ("150+", "Juegos analizados", "#111111", [40, 70, 95, 120, 140, 150, 150], "+18 títulos"),
-            ("16", "Discursos NLP", "#007A3D", [4, 7, 10, 12, 14, 16, 16], "1832–2022"),
-            ("87", "Puntos sanitización", "#E30613", [10, 30, 55, 70, 80, 87, 87], "100% validados"),
+            ("7", "Proyectos", "#22d3ee", [3, 4, 5, 6, 7, 7, 7], "+2 este año"),
+            ("80,595", "Puntos georeferenciados", "#54a0ff", [20, 35, 50, 65, 75, 80, 80], "+12% cobertura"),
+            ("150+", "Juegos analizados", "#fbbf24", [40, 70, 95, 120, 140, 150, 150], "+18 títulos"),
+            ("16", "Discursos NLP", "#34d399", [4, 7, 10, 12, 14, 16, 16], "1832–2022"),
+            ("87", "Puntos sanitización", "#f472b6", [10, 30, 55, 70, 80, 87, 87], "100% validados"),
         ]),
         card("Key Findings & Insights — Para Evaluadores", html.Div([
-            insight_card("¿Qué problema resuelve?", "Portafolio fragmentado en 7 repos. Este hub unifica métricas ejecutivas con drill-down por proyecto para decisiones rápidas de contratación.", "#E30613"),
-            insight_card("¿Metodología?", "ETL reproducible + tests pytest + CI con coverage + deploys Render con gunicorn. Datos reales georeferenciados y scraping auditado.", "#0066CC"),
-            insight_card("¿Qué decisión habilita?", "Comparar impacto por dominio (deporte, mercado indie, NLP histórico, geoespacial) en 30 segundos y profundizar solo donde hay fit.", "#007A3D"),
+            insight_card("¿Qué problema resuelve?", "Portafolio fragmentado en 7 repos. Este hub unifica métricas ejecutivas con drill-down por proyecto para decisiones rápidas de contratación.", "#22d3ee"),
+            insight_card("¿Metodología?", "ETL reproducible + tests pytest + CI con coverage + deploys Render con gunicorn. Datos reales georeferenciados y scraping auditado.", "#a78bfa"),
+            insight_card("¿Qué decisión habilita?", "Comparar impacto por dominio (deporte, mercado indie, NLP histórico, geoespacial) en 30 segundos y profundizar solo donde hay fit.", "#34d399"),
         ])),
         card("Proyectos Destacados — clic para filtrar", html.Div([
             html.Div(
@@ -353,17 +392,17 @@ def overview_tab():
                     html.Button(
                         id={"type": "project-filter", "index": p["tab"]},
                         n_clicks=0,
-                        style={"backgroundColor": "#FFFFFF", "border": "3px solid #111111", "boxShadow": "6px 6px 0px #111111", "padding": "18px", "cursor": "pointer", "textAlign": "left"},
+                        style={"backgroundColor": "#11161f", "border": "1px solid rgba(255,255,255,0.08)", "borderRadius": "12px", "borderTop": f"3px solid {p['color']}", "padding": "18px", "cursor": "pointer", "textAlign": "left"},
                         children=[
                             html.Div(p["icon"], style={"fontSize": "2rem", "marginBottom": "8px"}),
-                            html.Div(p["name"], style={"fontWeight": "900", "color": "#111111", "textTransform": "uppercase", "fontSize": "0.85rem"}),
-                            html.Div(p["desc"], style={"fontSize": "0.82rem", "color": "#5A5A5A", "marginTop": "4px"}),
+                            html.Div(p["name"], style={"fontWeight": "700", "color": "#e8edf2", "fontSize": "0.95rem", "fontFamily": FONT_UI}),
+                            html.Div(p["desc"], style={"fontSize": "0.85rem", "color": "#8b94a3", "marginTop": "4px"}),
                         ],
                     )
                     for p in projects
                 ],
             ),
-            html.Div(id="project-filter-output", style={"marginTop": "12px", "fontWeight": "700"}),
+            html.Div(id="project-filter-output", style={"marginTop": "12px", "fontWeight": "600", "color": "#8b94a3"}),
         ])),
     ])
 
@@ -374,21 +413,21 @@ def worldcup_tab():
         return card("World Cup 2026", html.P("Data not available"))
     df = data["wc_matches"]
     total_goals = int(df["home_score"].sum() + df["away_score"].sum())
-    fig = px.histogram(df, x="home_score", nbins=10, title="Distribución de Goles — clic una barra para filtrar")
+    fig = px.histogram(df, x="home_score", nbins=10, title="Distribución de Goles — clic una barra para filtrar",
+                       color_discrete_sequence=["#22d3ee"])
     fig.update_traces(
-        marker_line_width=2, marker_line_color="#111111",
-        hovertemplate="<b>Goles local: %{x}</b><br>Partidos: %{y}<br>%{y} de " + str(len(df)) + " (%{y:.0%})<extra></extra>",
+        hovertemplate="<b>Goles local: %{x}</b><br>Partidos: %{y}<br>%{y} de " + str(len(df)) + "<extra></extra>",
     )
-    fig.update_layout(template="plotly_white", paper_bgcolor="#FFFFFF", plot_bgcolor="#FAFAF7", height=400, font={"color": "#111111"})
+    fig.update_layout(**CHART_TEMPLATE, height=400)
     return html.Div([
         stat_row([
-            (str(len(df)), "Partidos", "#E30613", [20, 40, 60, 80, 100, len(df)], f"{len(df)} totales"),
-            (str(total_goals), "Goles", "#0066CC", [50, 120, 200, 280, 320, total_goals], f"{total_goals/len(df):.1f} por partido"),
+            (str(len(df)), "Partidos", "#f472b6", [20, 40, 60, 80, 100, len(df)], f"{len(df)} totales"),
+            (str(total_goals), "Goles", "#22d3ee", [50, 120, 200, 280, 320, total_goals], f"{total_goals/len(df):.1f} por partido"),
         ]),
         card("Key Insights — World Cup", html.Div([
-            insight_card("¿Problema?", "Comparar Mundiales con formato distinto sin sesgo narrativo.", "#E30613"),
-            insight_card("¿Metodología?", "SQLite + 16 queries + RandomForest con CV + reportes reproducibles.", "#0066CC"),
-            insight_card("¿Decisión?", "Qué sede/grupo rinde más para planificar cobertura y viajes.", "#007A3D"),
+            insight_card("¿Problema?", "Comparar Mundiales con formato distinto sin sesgo narrativo.", "#f472b6"),
+            insight_card("¿Metodología?", "SQLite + 16 queries + RandomForest con CV + reportes reproducibles.", "#a78bfa"),
+            insight_card("¿Decisión?", "Qué sede/grupo rinde más para planificar cobertura y viajes.", "#34d399"),
         ])),
         card("Análisis de Goles — cross-filtering activo", html.Div([
             dcc.Graph(id="worldcup-goals-hist", figure=fig),
@@ -428,10 +467,21 @@ def geo_tab():
     if "census" not in data:
         return card("Geografía", html.P("Data not available"))
     df = data["census"]
-    fig = px.line(df, x="census_year", y="population", color="region", title="Población por Región")
-    fig.update_layout(template="plotly_dark", paper_bgcolor=COLORS["card"], height=600)
+    latest = int(df["census_year"].max())
+    totals = df[df["census_year"] == latest].sort_values("population", ascending=False)
+    top8 = totals.head(8)["region"].tolist()
+    df["region_group"] = df["region"].where(df["region"].isin(top8), "Otras regiones")
+    fig = px.line(df, x="census_year", y="population", color="region_group", title="Población por Región (Top 8 + resto)")
+    fig.update_traces(
+        hovertemplate="<b>%{fullData.name}</b><br>Año: %{x}<br>Población: %{y:,.0f} miles<extra></extra>",
+    )
+    fig.update_layout(
+        **CHART_TEMPLATE, height=600,
+        xaxis_title="Año censal", yaxis_title="Población (miles)",
+        legend_title="Región",
+    )
     return html.Div([
-        stat_row([(str(df["region"].nunique()), "Regiones"), (str(df["census_year"].min()) + "-" + str(df["census_year"].max()), "Censos")]),
+        stat_row([(str(df["region"].nunique()), "Regiones"), (str(df["census_year"].min()) + "-" + str(latest), "Censos")]),
         card("Evolución Demográfica", dcc.Graph(figure=fig)),
     ])
 
