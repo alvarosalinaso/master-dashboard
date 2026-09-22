@@ -63,7 +63,8 @@ CHART_TEMPLATE = dict(
     yaxis=dict(gridcolor="rgba(255,255,255,0.06)", zerolinecolor="rgba(255,255,255,0.12)",
                title=dict(font=dict(size=13)), tickfont=dict(family="JetBrains Mono,monospace", size=12)),
     legend=dict(font=dict(size=12), bgcolor="rgba(0,0,0,0)"),
-    colorway=["#22d3ee", "#f472b6", "#fbbf24", "#34d399", "#a78bfa", "#54a0ff"],
+    # Okabe-Ito (2008), ordenado para dark: colorblind-safe categórico.
+    colorway=["#56B4E9", "#E69F00", "#009E73", "#F0E442", "#CC79A7", "#D55E00", "#0072B2", "#999999"],
 )
 
 

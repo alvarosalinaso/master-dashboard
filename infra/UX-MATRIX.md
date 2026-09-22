@@ -1,39 +1,52 @@
-# Matriz UX/UI — Portfolio Analytics (Fase B)
+# Matriz UX/UI — Portfolio Analytics (Fase B, rev. Data-Art)
 
-Patrón aplicado por proyecto. Estilos: **Bauhaus** (claro, borde negro grueso,
-sombra dura, póster geométrico) / **Neon** (oscuro, glow, red de datos).
+Sistema único **Data-Art Poster oscuro** en los 7 dashboards Dash.
+Bauhaus/Mondrian/Haring eliminados por completo (2026-09-22).
 
-| Proyecto | Estilo | Hero póster | KPI sparklines + deltas | Cross-filtering | Insights (problema/metodología/decisión) | Hovertemplate rico | Commit |
-|---|---|---|---|---|---|---|---|
-| master-dashboard | Bauhaus claro | SVG Bauhaus inline | Sí (5 KPIs) | Botones proyecto → mensaje + hist WorldCup click | Sí (hub) | Sí (WorldCup bars) | `00decf5` |
-| sanitizacion-santiago | Bauhaus Mondrian | Tira SVG Bauhaus | Sí (tipos) | Checklist/dropdown global + bar click → mensaje | Sí (mapa) | Sí (mapa + barras) | `c798dee` |
-| cajas-alimentacion | Bauhaus Haring | Formas Haring (círculo/cuadrado/triángulo) | Sí (clusters) | Bar clusters click → mensaje | Sí (mapa) | Sí (mapa + barras) | `5c3d187` |
-| chile-geografia-historica | Bauhaus tierra | Tira SVG Bauhaus tierra | Sí (serie nacional) | Línea censal click → mensaje | Sí (censo) | Sí (línea censal) | `5aa3789` |
-| worldcup-2026 | Neon oscuro | Hero glow SVG (líneas + dots) | Sí (goles/partidos) | Barras por ronda click → mensaje | Sí (overview) | Sí (barras, líneas, pie) | `87e1de8` |
-| geopolitica-textual-nlp | Manuscrito + Neon | Strip red neón sobre manuscrito | Sí (entidades) | Barras NER click → mensaje | Sí (NER) | Sí (barras NER) | `22eba1a` |
-| chilean-videogames-analysis | Neon cyberpunk | Existente (scanlines + glow) | Sí (mercado) | Pie plataformas click → mensaje | Sí (mercado) | Sí (pie plataformas) | `a936245` |
-| manchester-united-analisis | Estático (PNG) | N/A — salida matplotlib | Parcial (tablas resumen) | N/A (sin Dash) | Vía `generate_report.py` | N/A | — |
-| united-passing-efficiency-24-25 | Estático (PNG) | N/A — salida matplotlib | Parcial (tablas resumen) | N/A (sin Dash) | Vía `generate_report.py` | N/A | — |
-| tactical-narrative-graph-analysis | Estático (HTML pyvis) | N/A — grafo interactivo pyvis | Parcial (métricas JSON) | Nativo pyvis (zoom/vecinos) | Vía reporte + métricas | Nativo pyvis | — |
+## Fundamento profesional
 
-## Componentes reutilizables (copiar/pegar entre dashboards)
+- **Tufte** — data-ink ratio: sin bordes gruesos, sin sombras duras, sin grids
+  pesados; se borra todo lo que no codifique dato (chartjunk).
+- **Okabe-Ito (2008)** — paleta categórica colorblind-safe (estándar Nature Methods),
+  adaptada a dark: `#56B4E9` `#E69F00` `#009E73` `#F0E442` `#CC79A7` `#D55E00` `#0072B2` `#999999`.
+- **ColorBrewer/viridis** — escalas continuas (densidades, heatmaps, coropletas).
+- **Data-Viz-Art / magazine genre** — el gráfico como héroe: titular + línea de fuente,
+  tipografía mono para datos (`JetBrains Mono`/Consolas), storytelling editorial al lado.
+- **Lupi (Data Humanism)** — cada visual responde problema → metodología → decisión.
 
-- `sparkline(values, color)` — micro-gráfico 34–40px sin ejes para KPI cards.
-- `insight_card(pregunta, respuesta, acento)` — tarjeta con borde lateral de acento.
+## Tokens del sistema
+
+- Canvas `#0a0e14`, tarjetas `#11161f`, borde `1px rgba(255,255,255,0.08)`, radio 12–14px.
+- Texto `#e8edf2`, muted `#8b94a3`, acento UI `#22d3ee`.
+- Títulos Inter 700–800, datos en mono; labels ≥0.75rem, ticks mono 12px.
+- Fondo con textura de datos (dot-grid + anillos de contorno + scatter, SVG inline, sin assets).
+
+## Componentes reutilizables
+
+- `sparkline(values, color)` — micro-gráfico 32–40px sin ejes para KPI cards.
+- `insight_card(pregunta, respuesta, acento)` — borde lateral de acento.
+- `chart_card` / `card` — titular + línea `Fuente:` + gráfico.
 - Callback cross-filter: `Input(<chart-id>, "clickData")` → `Output(<msg-id>, "children")`
-  con `prevent_initial_call=True` y `no_update` si no hay clic.
-- `hovertemplate` explícito en cada trace (nunca el tooltip crudo de Plotly).
+  con `prevent_initial_call=True` y `no_update` sin clic.
+- `hovertemplate` explícito en cada trace (nunca el tooltip crudo).
 
-## Reglas por estilo
+## Estado por proyecto
 
-- **Bauhaus:** fondo claro `#FAFAF7`/`#FFFFFF`, texto `#111111`/`#2c2c2c`,
-  bordes `3px solid`, sombras duras (`6–8px` offset sólido), formas primarias
-  (círculo/triángulo/cuadrado) en hero SVG, tipografía bold uppercase.
-- **Neon:** fondo `#0a0a1a`, tarjetas `rgba` con glow (`box-shadow` + `text-shadow`),
-  hero SVG con líneas de red y nodos brillantes, monoespaciada donde aplique.
+| Proyecto | Sistema | Hero | KPI sparklines + deltas | Cross-filtering | Insights | Hover rico | 3D rotativo | Commit |
+|---|---|---|---|---|---|---|---|---|
+| master-dashboard | Data-Art oscuro | Canvas dots+contornos+scatter | Sí (5 KPIs) | Botones proyecto + hist WorldCup | Sí (hub) | Sí | — | `d92b282` |
+| worldcup-2026 | Neón oscuro | Hero glow SVG | Sí | Barras por ronda | Sí | Sí | Radar polar (compare) | `99006ea` |
+| geopolitica-textual-nlp | Manuscrito + red neón | Strip red neón | Sí (entidades) | Barras NER | Sí (NER) | Sí | — | `872dc37` |
+| chilean-videogames-analysis | Neon cyberpunk | Existente scanlines+glow | Sí (mercado) | Pie plataformas | Sí (mercado) | Sí (burbujas) | Burbujas log-log | `40935e4` |
+| chile-geografia-historica | Data-Art oscuro | Tira canvas | Sí (serie nacional) | Línea censal | Sí (censo) | Sí | — | `8d5b64e` |
+| cajas-alimentacion | Data-Art oscuro | Formas Haring retiradas | Sí (clusters) | Barras clusters | Sí (mapa) | Sí | Scatter3d + contornos | `d9c8a7e` |
+| sanitizacion-santiago | Data-Art oscuro | Tira canvas | Sí (tipos) | Barras tipos | Sí (mapa) | Sí | Torre 3D por tipo | `ee54928` |
+| manchester-united-analisis | Estático (PNG) | N/A | Tablas resumen | N/A | En reporte | N/A | — | `6234e1f` |
+| united-passing-efficiency-24-25 | Estático (PNG) | N/A | Tablas resumen | N/A | Captions en plots | N/A | — | `3c65365` |
+| tactical-narrative-graph-analysis | Estático (pyvis) | N/A | Métricas JSON | Nativo pyvis | En snippets | Nativo pyvis | Grafo 3D pyvis | `0d8073a` |
 
 ## Verificación
 
-- `pytest tests/ -q` verde en cada repo tras el rediseño.
-- Apertura manual `:8050`–`:8056` + un clic cross-filter por dashboard.
-- `docker compose ps` con 8 servicios `healthy` + `curl :8080/healthz` → `ok`.
+- `pytest tests/ -q` verde en cada repo tras cada rediseño.
+- Render de tabs verificado en Python (map/dist/analysis/data) donde aplica.
+- `docker compose ps` con 8 servicios + `curl :8080/healthz` → `ok` (corre en PC del dueño).
