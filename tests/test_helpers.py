@@ -1,7 +1,6 @@
 """Tests for master-dashboard helpers."""
 
-import pytest
-from app import card, stat_row, COLORS
+from app import COLORS, card, stat_row
 
 
 def test_card_returns_div():
@@ -45,5 +44,15 @@ def test_stat_row_empty():
 
 def test_colors_dict():
     """Test COLORS dict has expected keys."""
-    expected_keys = {"bg", "card", "border", "accent", "gold", "text", "muted", "green", "blue"}
+    expected_keys = {
+        "bg",
+        "card",
+        "border",
+        "accent",
+        "gold",
+        "text",
+        "muted",
+        "green",
+        "blue",
+    }
     assert expected_keys.issubset(set(COLORS.keys()))
