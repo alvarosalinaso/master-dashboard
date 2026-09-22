@@ -442,11 +442,17 @@ def games_tab():
     if "games" not in data:
         return card("Videojuegos", html.P("Data not available"))
     df = data["games"]
-    fig = px.pie(df, names="source", title="Distribución por Plataforma")
-    fig.update_layout(template="plotly_dark", paper_bgcolor=COLORS["card"], height=400)
+    fig = px.pie(df, names="source", title="Distribución por Plataforma — clic para filtrar")
+    fig.update_traces(
+        hovertemplate="<b>%{label}</b><br>Juegos: %{value}<br>%{percent}<extra>Clic para filtrar</extra>",
+    )
+    fig.update_layout(**CHART_TEMPLATE, height=400)
     return html.Div([
         stat_row([(str(len(df)), "Juegos"), (str(df["source"].nunique()), "Plataformas")]),
-        card("Plataformas", dcc.Graph(figure=fig)),
+        card("Plataformas", html.Div([
+            dcc.Graph(id="m-games-pie", figure=fig),
+            html.Div(id="m-games-output", style={"marginTop": "8px", "color": "#8b94a3", "fontWeight": "600"}),
+        ])),
     ])
 
 
@@ -455,11 +461,18 @@ def nlp_tab():
     if "speeches" not in data:
         return card("NLP", html.P("Data not available"))
     df = data["speeches"]
-    fig = px.scatter(df, x="year", y="speaker", title="Discursos Presidenciales")
-    fig.update_layout(template="plotly_dark", paper_bgcolor=COLORS["card"], height=500)
+    fig = px.scatter(df, x="year", y="speaker", title="Discursos Presidenciales — clic un punto para filtrar")
+    fig.update_traces(
+        marker=dict(size=10),
+        hovertemplate="Año: %{x}<br>%{y}<extra>Clic para filtrar</extra>",
+    )
+    fig.update_layout(**CHART_TEMPLATE, height=500)
     return html.Div([
         stat_row([(str(len(df)), "Discursos"), (str(df["year"].min()) + "-" + str(df["year"].max()), "Período")]),
-        card("Línea de Tiempo", dcc.Graph(figure=fig)),
+        card("Línea de Tiempo", html.Div([
+            dcc.Graph(id="m-nlp-scatter", figure=fig),
+            html.Div(id="m-nlp-output", style={"marginTop": "8px", "color": "#8b94a3", "fontWeight": "600"}),
+        ])),
     ])
 
 
@@ -483,7 +496,10 @@ def geo_tab():
     )
     return html.Div([
         stat_row([(str(df["region"].nunique()), "Regiones"), (str(df["census_year"].min()) + "-" + str(latest), "Censos")]),
-        card("Evolución Demográfica", dcc.Graph(figure=fig)),
+        card("Evolución Demográfica — clic una serie para filtrar", html.Div([
+            dcc.Graph(id="m-geo-line", figure=fig),
+            html.Div(id="m-geo-output", style={"marginTop": "8px", "color": "#8b94a3", "fontWeight": "600"}),
+        ])),
     ])
 
 
@@ -498,10 +514,14 @@ def cajas_tab():
         map_style="carto-positron",
         title="Puntos de Entrega — Cajas de Alimentación",
     )
-    fig.update_layout(template="plotly_dark", paper_bgcolor=COLORS["card"], height=600)
+    fig.update_layout(**CHART_TEMPLATE, height=600)
     return html.Div([
         stat_row([(str(len(df)), "Puntos de entrega")]),
-        card("Mapa de Entregas", dcc.Graph(figure=fig)),
+        card("Mapa de Entregas", html.Div([
+            dcc.Graph(figure=fig),
+            html.Div("Mapa de densidad agregado — ver detalle por cluster en el repo cajas-alimentacion.",
+                     style={"color": "#8b94a3", "fontSize": "0.85rem", "marginTop": "8px"}),
+        ])),
     ])
 
 
@@ -519,14 +539,66 @@ def sanit_tab():
         title="Puntos de Sanitización — Comuna de Santiago",
         color_discrete_map={"Cité": "#e74c3c", "Pasaje": "#3498db", "Edificio": "#2ecc71", "Domicilio": "#f39c12", "Calle": "#9b59b6", "Otro": "#95a5a6"},
     )
-    fig_map.update_layout(template="plotly_dark", paper_bgcolor=COLORS["card"], height=600)
-    fig_bar = px.bar(x=tipo_counts.index, y=tipo_counts.values, title="Ubicaciones por Tipo", labels={"x": "Tipo", "y": "Cantidad"}, color=tipo_counts.index, color_discrete_map={"Cité": "#e74c3c", "Pasaje": "#3498db", "Edificio": "#2ecc71", "Domicilio": "#f39c12", "Calle": "#9b59b6", "Otro": "#95a5a6"})
-    fig_bar.update_layout(template="plotly_dark", paper_bgcolor=COLORS["card"], height=400, showlegend=False)
+    fig_map.update_layout(**CHART_TEMPLATE, height=600)
+    fig_bar = px.bar(x=tipo_counts.index, y=tipo_counts.values, title="Ubicaciones por Tipo — clic para filtrar", labels={"x": "Tipo", "y": "Cantidad"}, color=tipo_counts.index, color_discrete_sequence=["#56B4E9", "#E69F00", "#009E73", "#F0E442", "#CC79A7"])
+    fig_bar.update_traces(
+        hovertemplate="<b>%{x}</b><br>Puntos: %{y}<extra>Clic para filtrar</extra>",
+    )
+    fig_bar.update_layout(**CHART_TEMPLATE, height=400, showlegend=False)
     return html.Div([
         stat_row([(str(len(df)), "Puntos de sanitización"), (str(df["type"].nunique()), "Categorías")]),
         card("Mapa de Sanitización", dcc.Graph(figure=fig_map)),
-        card("Distribución por Tipo", dcc.Graph(figure=fig_bar)),
+        card("Distribución por Tipo", html.Div([
+            dcc.Graph(id="m-sanit-bar", figure=fig_bar),
+            html.Div(id="m-sanit-output", style={"marginTop": "8px", "color": "#8b94a3", "fontWeight": "600"}),
+        ])),
     ])
+
+
+@callback(
+    Output("m-games-output", "children"),
+    Input("m-games-pie", "clickData"),
+    prevent_initial_call=True,
+)
+def m_games_crossfilter(click):
+    if not click:
+        return no_update
+    return f"Plataforma: {click['points'][0].get('label', '?')} — ver drill-down en el repo chilean-videogames-analysis."
+
+
+@callback(
+    Output("m-nlp-output", "children"),
+    Input("m-nlp-scatter", "clickData"),
+    prevent_initial_call=True,
+)
+def m_nlp_crossfilter(click):
+    if not click:
+        return no_update
+    pt = click["points"][0]
+    return f"Discurso: {pt.get('y', '?')} ({pt.get('x', '?')}) — ver drill-down en geopolitica-textual-nlp."
+
+
+@callback(
+    Output("m-geo-output", "children"),
+    Input("m-geo-line", "clickData"),
+    prevent_initial_call=True,
+)
+def m_geo_crossfilter(click):
+    if not click:
+        return no_update
+    pt = click["points"][0]
+    return f"Serie: {pt.get('legendgroup', pt.get('curveNumber', '?'))} año {pt.get('x', '?')} — ver drill-down en chile-geografia-historica."
+
+
+@callback(
+    Output("m-sanit-output", "children"),
+    Input("m-sanit-bar", "clickData"),
+    prevent_initial_call=True,
+)
+def m_sanit_crossfilter(click):
+    if not click:
+        return no_update
+    return f"Tipo: {click['points'][0].get('x', '?')} — ver drill-down en sanitizacion-santiago."
 
 
 if __name__ == "__main__":
