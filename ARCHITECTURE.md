@@ -11,15 +11,13 @@ que ya viven en otros repos.
 
 - `BASE = Path(__file__).parent.parent` — el directorio padre del repo (no es un
   repositorio git) contiene los proyectos hermanos, y desde ahí se resuelven las rutas.
-- `load_data()` lee 9 datasets de 6 repos:
+- `load_data()` lee 7 datasets de 4 repos:
   | Repo hermano | Archivo | Claves en `data` |
   | --- | --- | --- |
   | `worldcup-2026` | `data/worldcup.db` | `wc_matches`, `wc_teams` |
   | `chilean-videogames-analysis` | `data/processed/games.csv` | `games` |
   | `geopolitica-textual-nlp` | `data/processed/speeches.csv` | `speeches` |
   | `chile-geografia-historica` | `data/processed/census.csv`, `events.csv`, `presidents.csv` | `census`, `events`, `presidents` |
-  | `cajas-alimentacion` | `data/raw/coordinates.csv` | `cajas` |
-  | `sanitizacion-santiago` | `data/raw/sanitization_points.csv` | `sanit` (ausente: repo archivado) |
 - **No hay datos versionados en este repo.**
 - Carga perezosa: `get_data()` cachea el resultado de `load_data()` en `_DATA`.
 - **Degradación por archivo:** cada lectura va en su propio `try/except`; si el archivo
@@ -32,11 +30,11 @@ que ya viven en otros repos.
 - `PROJECTS` — índice de navegación: tab, nombre, colores y repo fuente de cada proyecto.
 - `overview_kpis()` / `kpi_value()` / `project_desc()` — cifras del tab *Resumen* y de las
   tarjetas, derivadas siempre de `load_data()` (sin números hardcodeados).
-- Layout: encabezado, `dcc.Tabs` (7 tabs) y contenedor `tab-content`.
-- Callbacks (7 en total):
+- Layout: encabezado, `dcc.Tabs` (5 tabs) y contenedor `tab-content`.
+- Callbacks (6 en total):
   - `render_tab` — dibuja el tab activo.
   - `project_open_tab` — clic en una tarjeta → abre su tab (navegación real).
-  - 5 callbacks de clic en gráficos (`worldcup`, `games`, `nlp`, `geo`, `sanit`) que
+  - 4 callbacks de clic en gráficos (`worldcup`, `games`, `nlp`, `geo`) que
     **solo informan** y declaran que el hub no filtra; el detalle vive en el repo fuente.
 - Helpers de UI: `card`, `stat_row`, `kpi_card`, `insight_card`, `sparkline`.
 
@@ -51,7 +49,7 @@ que ya viven en otros repos.
 - `test_helpers.py` — `card`, `stat_row`, `COLORS`.
 - `test_kpis.py` — los KPIs salen de los datos (anti-hardcoding) y degradan a `n/d`.
 - `test_load_data.py` — un CSV corrupto/ausente no rompe la carga.
-- `test_smoke.py` — la app importa, `GET /` responde 200 y hay 7 callbacks registrados.
+- `test_smoke.py` — la app importa, `GET /` responde 200 y hay 6 callbacks registrados.
 - `test_tabs.py` — cada tab con y sin datos.
 
 ## Flujo de datos
@@ -81,4 +79,5 @@ reporte de coverage no mide `app.py` (ajuste pendiente; no afecta a ruff ni a py
 ## Pendientes conocidos
 
 - Apuntar `--cov=app` en CI para que el coverage mida algo real.
-- `sanitizacion-santiago` está archivado sin datos: su tab queda en *Data not available*.
+- El hub cubre 5 tabs sobre 4 repos públicos; `cajas-alimentacion` y
+  `sanitizacion-santiago` son privados por datos personales y no forman parte del hub.

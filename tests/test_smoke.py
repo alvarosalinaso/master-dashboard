@@ -18,14 +18,14 @@ def test_server_serves_home_and_callbacks():
     assert deps.status_code == 200
     outputs = [d["output"] for d in json.loads(deps.data)]
     assert "tabs.value" in outputs
-    # Superficie de callbacks: render de tabs + navegación por tarjeta + 5 de clic
+    # Superficie de callbacks: render de tabs + navegación por tarjeta + 4 de clic
     # informativo (ninguno filtra datos). Cambiar esto debería ser decisión consciente.
-    assert len(outputs) == 7
+    assert len(outputs) == 6
 
 
 def test_layout_lists_all_tabs():
     layout = str(app.app.layout)
-    for value in ("overview", "worldcup", "games", "nlp", "geo", "cajas", "sanit"):
+    for value in ("overview", "worldcup", "games", "nlp", "geo"):
         assert value in layout
 
 

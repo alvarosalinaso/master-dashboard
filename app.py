@@ -227,8 +227,6 @@ EVENTS_CSV = BASE / "chile-geografia-historica" / "data" / "processed" / "events
 PRESIDENTS_CSV = (
     BASE / "chile-geografia-historica" / "data" / "processed" / "presidents.csv"
 )
-CAJAS_CSV = BASE / "cajas-alimentacion" / "data" / "raw" / "coordinates.csv"
-SANIT_CSV = BASE / "sanitizacion-santiago" / "data" / "raw" / "sanitization_points.csv"
 
 # Índice de navegación: cada tab apunta al repo hermano del que lee sus datos.
 PROJECTS: list[dict[str, Any]] = [
@@ -266,26 +264,6 @@ PROJECTS: list[dict[str, Any]] = [
         "desc": "Censos + eventos + presidentes",
         "source_repo": "chile-geografia-historica",
     },
-    {
-        "tab": "cajas",
-        "name": "Cajas Alimentación",
-        "icon": "📦",
-        "color": "#a78bfa",
-        "desc": "Puntos de entrega de cajas",
-        "desc_count": "{n} puntos de entrega",
-        "count_key": "cajas",
-        "source_repo": "cajas-alimentacion",
-    },
-    {
-        "tab": "sanit",
-        "name": "Sanitización Santiago",
-        "icon": "🧹",
-        "color": "#54a0ff",
-        "desc": "Puntos de sanitización comunal (datos no disponibles)",
-        "desc_count": "{n} puntos de sanitización comunal",
-        "count_key": "sanit",
-        "source_repo": "sanitizacion-santiago",
-    },
 ]
 
 
@@ -313,8 +291,6 @@ def load_data() -> dict[str, Any]:
         ("census", CENSUS_CSV),
         ("events", EVENTS_CSV),
         ("presidents", PRESIDENTS_CSV),
-        ("cajas", CAJAS_CSV),
-        ("sanit", SANIT_CSV),
     )
     for key, path in csv_datasets:
         if not path.exists():
@@ -350,8 +326,6 @@ def overview_kpis() -> dict[str, int | None]:
         "projects": len(PROJECTS),
         "games": rows("games"),
         "speeches": rows("speeches"),
-        "cajas_points": rows("cajas"),
-        "sanit_points": rows("sanit"),
     }
 
 
@@ -439,8 +413,6 @@ app.layout = html.Div(
                 dcc.Tab(label="Videojuegos Chile", value="games", **_tab_style()),
                 dcc.Tab(label="Discurso NLP", value="nlp", **_tab_style()),
                 dcc.Tab(label="Geografía Chile", value="geo", **_tab_style()),
-                dcc.Tab(label="Cajas Alimentación", value="cajas", **_tab_style()),
-                dcc.Tab(label="Sanitización Santiago", value="sanit", **_tab_style()),
             ],
         ),
         html.Div(
@@ -582,8 +554,6 @@ def render_tab(tab):
         "games": games_tab,
         "nlp": nlp_tab,
         "geo": geo_tab,
-        "cajas": cajas_tab,
-        "sanit": sanit_tab,
     }
     return funcs.get(tab, overview_tab)()
 
@@ -633,8 +603,6 @@ def overview_tab():
                     (kpi_value(kpis["projects"]), "Proyectos", "#22d3ee"),
                     (kpi_value(kpis["games"]), "Juegos analizados", "#fbbf24"),
                     (kpi_value(kpis["speeches"]), "Discursos NLP", "#34d399"),
-                    (kpi_value(kpis["cajas_points"]), "Puntos de entrega", "#54a0ff"),
-                    (kpi_value(kpis["sanit_points"]), "Puntos sanitización", "#f472b6"),
                 ]
             ),
             html.Div(
@@ -945,113 +913,6 @@ def geo_tab():
     )
 
 
-def cajas_tab():
-    data = get_data()
-    if "cajas" not in data:
-        return card("Cajas Alimentación", html.P("Data not available"))
-    df = data["cajas"]
-    fig = px.density_map(
-        df,
-        lat="lat",
-        lon="lon",
-        radius=8,
-        center={"lat": -33.45, "lon": -70.66},
-        zoom=11,
-        map_style="carto-positron",
-        title="Puntos de Entrega — Cajas de Alimentación",
-    )
-    fig.update_layout(**CHART_TEMPLATE, height=600)
-    return html.Div(
-        [
-            stat_row([(str(len(df)), "Puntos de entrega")]),
-            card(
-                "Mapa de Entregas",
-                html.Div(
-                    [
-                        dcc.Graph(figure=fig),
-                        html.Div(
-                            "Mapa de densidad agregado — ver detalle por cluster en el repo cajas-alimentacion.",
-                            style={
-                                "color": "#8b94a3",
-                                "fontSize": "0.85rem",
-                                "marginTop": "8px",
-                            },
-                        ),
-                    ]
-                ),
-            ),
-        ]
-    )
-
-
-def sanit_tab():
-    data = get_data()
-    if "sanit" not in data:
-        return card("Sanitización Santiago", html.P("Data not available"))
-    df = data["sanit"]
-    tipo_counts = df["type"].value_counts()
-    fig_map = px.scatter_map(
-        df,
-        lat="lat",
-        lon="lon",
-        color="type",
-        hover_name="name",
-        hover_data=["description", "type"],
-        center={"lat": -33.45, "lon": -70.66},
-        zoom=12,
-        map_style="carto-positron",
-        title="Puntos de Sanitización — Comuna de Santiago",
-        color_discrete_map={
-            "Cité": "#e74c3c",
-            "Pasaje": "#3498db",
-            "Edificio": "#2ecc71",
-            "Domicilio": "#f39c12",
-            "Calle": "#9b59b6",
-            "Otro": "#95a5a6",
-        },
-    )
-    fig_map.update_layout(**CHART_TEMPLATE, height=600)
-    fig_bar = px.bar(
-        x=tipo_counts.index,
-        y=tipo_counts.values,
-        title="Ubicaciones por Tipo",
-        labels={"x": "Tipo", "y": "Cantidad"},
-        color=tipo_counts.index,
-        color_discrete_sequence=["#56B4E9", "#E69F00", "#009E73", "#F0E442", "#CC79A7"],
-    )
-    fig_bar.update_traces(
-        hovertemplate="<b>%{x}</b><br>Puntos: %{y}<extra></extra>",
-    )
-    fig_bar.update_layout(**CHART_TEMPLATE, height=400, showlegend=False)
-    return html.Div(
-        [
-            stat_row(
-                [
-                    (str(len(df)), "Puntos de sanitización"),
-                    (str(df["type"].nunique()), "Categorías"),
-                ]
-            ),
-            card("Mapa de Sanitización", dcc.Graph(figure=fig_map)),
-            card(
-                "Distribución por Tipo",
-                html.Div(
-                    [
-                        dcc.Graph(id="m-sanit-bar", figure=fig_bar),
-                        html.Div(
-                            id="m-sanit-output",
-                            style={
-                                "marginTop": "8px",
-                                "color": "#8b94a3",
-                                "fontWeight": "600",
-                            },
-                        ),
-                    ]
-                ),
-            ),
-        ]
-    )
-
-
 @callback(
     Output("m-games-output", "children"),
     Input("m-games-pie", "clickData"),
@@ -1095,21 +956,6 @@ def m_geo_crossfilter(click):
     return (
         f"Serie: {serie} año {pt.get('x', '?')}. Este hub no filtra datos: "
         "el detalle está en el repo chile-geografia-historica."
-    )
-
-
-@callback(
-    Output("m-sanit-output", "children"),
-    Input("m-sanit-bar", "clickData"),
-    prevent_initial_call=True,
-)
-def m_sanit_crossfilter(click):
-    if not click:
-        return no_update
-    tipo = click["points"][0].get("x", "?")
-    return (
-        f"Tipo: {tipo}. Este hub no filtra datos: el detalle está en el repo "
-        "sanitizacion-santiago."
     )
 
 

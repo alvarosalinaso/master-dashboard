@@ -3,13 +3,11 @@
 import pandas as pd
 
 from app import (
-    cajas_tab,
     games_tab,
     geo_tab,
     get_data,
     nlp_tab,
     overview_tab,
-    sanit_tab,
     worldcup_tab,
 )
 
@@ -143,23 +141,3 @@ def test_geo_tab_with_data():
 
     if "census" in get_data():
         del get_data()["census"]
-
-
-def test_cajas_tab_no_data():
-    """Test cajas_tab with no data."""
-    data = get_data()
-    if "cajas" in data:
-        del data["cajas"]
-
-    result = cajas_tab()
-    assert "Data not available" in str(result)
-
-
-def test_sanit_tab_no_data():
-    """Test sanit_tab with no data."""
-    data = get_data()
-    if "sanit" in data:
-        del data["sanit"]
-
-    result = sanit_tab()
-    assert "Data not available" in str(result)

@@ -28,8 +28,6 @@ def test_load_data_without_any_source(monkeypatch, tmp_path):
         "CENSUS_CSV",
         "EVENTS_CSV",
         "PRESIDENTS_CSV",
-        "CAJAS_CSV",
-        "SANIT_CSV",
     ):
         monkeypatch.setattr(app, name, tmp_path / f"no-existe-{name}")
 
