@@ -80,6 +80,5 @@ reporte de coverage no mide `app.py` (ajuste pendiente; no afecta a ruff ni a py
 
 ## Pendientes conocidos
 
-- Captura de pantalla del tab *Resumen* para el README.
 - Apuntar `--cov=app` en CI para que el coverage mida algo real.
 - `sanitizacion-santiago` está archivado sin datos: su tab queda en *Data not available*.

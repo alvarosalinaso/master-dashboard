@@ -37,8 +37,7 @@ lee los CSV/DB que ya viven en los repos hermanos y los presenta en una sola pan
 
 ## Captura
 
-TODO: captura de pantalla pendiente — correr `python app.py`, abrir
-`http://localhost:8050` y capturar el tab *Resumen*.
+![Tab Resumen del master dashboard](docs/screenshot.png)
 
 ## Tabs y repos fuente
 
