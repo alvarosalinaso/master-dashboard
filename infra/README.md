@@ -1,13 +1,15 @@
 # Infra — Analytics Portfolio (Docker)
 
-Copia versionada de la infraestructura que vive en `C:\Users\Alvaro\github-limpio\`
-(ese directorio padre no es repo git, por eso se versiona aquí).
+Copia versionada de la infraestructura del portafolio. El directorio padre de este repo
+reúne los proyectos hermanos y **no es un repositorio git**, por eso los archivos se
+versionan dentro de `master-dashboard/infra/`.
 
 ## Archivos
 
 - `docker-compose.yml` — 8 servicios (`master-dashboard`, `worldcup`, `videogames`,
   `geopolitica`, `geografia`, `cajas`, `sanitizacion`, `nginx`) en red `analytics-network`.
-  Los paths están relativos a este directorio (`../../<proyecto>`).
+  Todos los `build.context` y `volumes` son rutas relativas al propio archivo
+  (`../../<proyecto>`): no hay rutas absolutas de usuario en este repo.
 - `nginx.conf` — hub en `:8080/` + redirects `/worldcup`, `/videogames`,
   `/geopolitica`, `/geografia`, `/cajas`, `/sanitizacion` (302 a puertos directos
   para no romper `/_dash-*`).
@@ -15,14 +17,21 @@ Copia versionada de la infraestructura que vive en `C:\Users\Alvaro\github-limpi
   El modelo spaCy se instala por wheel pineado directo
   (`es_core_news_sm-3.7.0`) porque `spacy download` generaba URL 404.
 - `requirements.analytics.txt` — dependencias consolidadas.
+- `UX-MATRIX.md` — matriz de decisiones de UX del hub.
 
-## Uso (desde `C:\Users\Alvaro\github-limpio`)
+## Uso
+
+Las rutas del compose son relativas al propio `docker-compose.yml`, así que el comando
+funciona desde el directorio padre (el que contiene los repos hermanos):
 
 ```cmd
-cd C:\Users\Alvaro\github-limpio
-docker compose up --build -d
-docker compose ps
+REM desde el directorio padre de este repo (el que contiene los repos hermanos)
+docker compose -f master-dashboard\infra\docker-compose.yml up --build -d
+docker compose -f master-dashboard\infra\docker-compose.yml ps
 curl http://localhost:8080/healthz
 ```
 
-Hub: `http://localhost:8080` — dashboards en `:8050`–`:8056`.
+Sin cambiar de directorio, el equivalente es lanzarlo desde `master-dashboard/` con
+`docker compose -f infra\docker-compose.yml up --build -d`.
+
+Hub: `http://localhost:8080` — apps en `:8050`–`:8056` (7 servicios + nginx).
