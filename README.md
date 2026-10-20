@@ -58,7 +58,9 @@ TODO: captura de pantalla pendiente — correr `python app.py`, abrir
 - Cifras descriptivas de los 6 proyectos con tab (conteos, períodos, distribuciones),
   calculadas al vuelo desde los archivos del repo hermano correspondiente.
 - Degrada por archivo: si falta o falla la lectura de un dataset, ese tab muestra
-  *Data not available* y su KPI muestra `n/d`; el resto de la app sigue funcionando.
+  *Data not available* y su KPI muestra `n/d`; el motivo se registra con `logging` y el
+  resto de la app sigue funcionando (hay un try/except por dataset en `load_data()`,
+  probado en `tests/test_load_data.py`).
 - Rutas relativas: `BASE = Path(__file__).parent.parent`, así que los repos hermanos se
   resuelven desde el directorio padre del repo (que no es un repositorio git); 6 de ellos
   aportan los archivos que este hub lee.
@@ -67,8 +69,9 @@ TODO: captura de pantalla pendiente — correr `python app.py`, abrir
 
 - No es un análisis nuevo: no calcula métricas propias, no entrena modelos y no filtra
   datasets entre dominios ni entre tabs.
-- No hay cross-filtering ni drill-down: los clics en tarjetas y gráficos solo navegan o
-  muestran el repo donde está el detalle.
+- No hay cross-filtering ni drill-down: los clics en las tarjetas de proyecto cambian de
+  tab (navegación), y los clics en los gráficos solo muestran un texto con el repo donde
+  vive el detalle. Nada filtra datos dentro de la app.
 - No persiste estado ni historial, y no valida la calidad de los datos (eso vive en los
   tests de cada repo hermano).
 - No cubre los demás repos del directorio padre (sports analytics, web, etc.): solo los

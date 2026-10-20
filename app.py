@@ -1,5 +1,6 @@
 """Master Dashboard — Todos los proyectos de Álvaro Salinas."""
 
+import logging
 import sqlite3
 from pathlib import Path
 from typing import Any
@@ -8,7 +9,9 @@ import dash
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from dash import Input, Output, callback, dcc, html, no_update
+from dash import ALL, Input, Output, callback, dcc, html, no_update
+
+logger = logging.getLogger(__name__)
 
 app = dash.Dash(
     __name__,
@@ -286,27 +289,40 @@ PROJECTS: list[dict[str, Any]] = [
 ]
 
 
+def _load_error(path: Path, exc: Exception) -> None:
+    logger.warning("Dataset no disponible (%s): %s", path, exc)
+
+
 def load_data() -> dict[str, Any]:
-    data = {}
+    """Carga cada dataset por separado.
+
+    Degradación por archivo: si falta o falla la lectura de uno, se registra el
+    aviso y el resto de los datasets se carga igual (nunca un crash global).
+    """
+    data: dict[str, Any] = {}
     if WC_DB.exists():
-        conn = sqlite3.connect(str(WC_DB))
-        data["wc_matches"] = pd.read_sql("SELECT * FROM matches", conn)
-        data["wc_teams"] = pd.read_sql("SELECT * FROM teams", conn)
-        conn.close()
-    if GAMES_CSV.exists():
-        data["games"] = pd.read_csv(GAMES_CSV)
-    if SPEECHES_CSV.exists():
-        data["speeches"] = pd.read_csv(SPEECHES_CSV)
-    if CENSUS_CSV.exists():
-        data["census"] = pd.read_csv(CENSUS_CSV)
-    if EVENTS_CSV.exists():
-        data["events"] = pd.read_csv(EVENTS_CSV)
-    if PRESIDENTS_CSV.exists():
-        data["presidents"] = pd.read_csv(PRESIDENTS_CSV)
-    if CAJAS_CSV.exists():
-        data["cajas"] = pd.read_csv(CAJAS_CSV)
-    if SANIT_CSV.exists():
-        data["sanit"] = pd.read_csv(SANIT_CSV)
+        try:
+            with sqlite3.connect(str(WC_DB)) as conn:
+                data["wc_matches"] = pd.read_sql("SELECT * FROM matches", conn)
+                data["wc_teams"] = pd.read_sql("SELECT * FROM teams", conn)
+        except Exception as exc:
+            _load_error(WC_DB, exc)
+    csv_datasets: tuple[tuple[str, Path], ...] = (
+        ("games", GAMES_CSV),
+        ("speeches", SPEECHES_CSV),
+        ("census", CENSUS_CSV),
+        ("events", EVENTS_CSV),
+        ("presidents", PRESIDENTS_CSV),
+        ("cajas", CAJAS_CSV),
+        ("sanit", SANIT_CSV),
+    )
+    for key, path in csv_datasets:
+        if not path.exists():
+            continue
+        try:
+            data[key] = pd.read_csv(path)
+        except Exception as exc:
+            _load_error(path, exc)
     return data
 
 
@@ -573,31 +589,19 @@ def render_tab(tab):
 
 
 @callback(
-    Output("project-filter-output", "children"),
-    Input({"type": "project-filter", "index": "worldcup"}, "n_clicks"),
-    Input({"type": "project-filter", "index": "games"}, "n_clicks"),
-    Input({"type": "project-filter", "index": "nlp"}, "n_clicks"),
-    Input({"type": "project-filter", "index": "geo"}, "n_clicks"),
-    Input({"type": "project-filter", "index": "cajas"}, "n_clicks"),
-    Input({"type": "project-filter", "index": "sanit"}, "n_clicks"),
+    Output("tabs", "value"),
+    Input({"type": "project-filter", "index": ALL}, "n_clicks"),
     prevent_initial_call=True,
 )
-def project_crossfilter(*clicks):
-    import dash
-
+def project_open_tab(*_clicks):
+    """Clic en una tarjeta de proyecto → abre su tab (navegación, no drill-down)."""
     ctx = dash.callback_context
     if not ctx.triggered:
         return no_update
-    tab = ctx.triggered[0]["prop_id"].split('"index": "')[1].split('"')[0]
-    names = {
-        "worldcup": "World Cup 2026",
-        "games": "Videojuegos Chile",
-        "nlp": "Discurso NLP",
-        "geo": "Geografía Chile",
-        "cajas": "Cajas Alimentación",
-        "sanit": "Sanitización Santiago",
-    }
-    return f"Filtro activo: {names.get(tab, tab)} — cambia al tab superior para ver el drill-down."
+    triggered = ctx.triggered_id
+    if not isinstance(triggered, dict):
+        return no_update
+    return triggered.get("index") or no_update
 
 
 @callback(
@@ -606,10 +610,14 @@ def project_crossfilter(*clicks):
     prevent_initial_call=True,
 )
 def worldcup_crossfilter(click):
+    """Feedback honesto: el clic solo informa; este hub no aplica filtros."""
     if not click:
         return no_update
     x = click["points"][0].get("x", "?")
-    return f"Goles seleccionados: {x} — el KPI de partidos se filtra a ese rango en el próximo drill-down."
+    return (
+        f"Goles del local en la barra seleccionada: {x}. "
+        "Este hub no filtra datos: el detalle está en el repo worldcup-2026."
+    )
 
 
 # ── Tabs ──────────────────────────────────────────────────────────────────────
@@ -667,7 +675,7 @@ def overview_tab():
                 ),
             ),
             card(
-                "Proyectos Destacados — clic para filtrar",
+                "Proyectos Destacados — clic para abrir su tab",
                 html.Div(
                     [
                         html.Div(
@@ -719,14 +727,6 @@ def overview_tab():
                                 for p in projects
                             ],
                         ),
-                        html.Div(
-                            id="project-filter-output",
-                            style={
-                                "marginTop": "12px",
-                                "fontWeight": "600",
-                                "color": "#8b94a3",
-                            },
-                        ),
                     ]
                 ),
             ),
@@ -744,7 +744,7 @@ def worldcup_tab():
         df,
         x="home_score",
         nbins=10,
-        title="Distribución de Goles — clic una barra para filtrar",
+        title="Distribución de Goles por partido",
         color_discrete_sequence=["#22d3ee"],
     )
     fig.update_traces(
@@ -761,14 +761,14 @@ def worldcup_tab():
                         str(len(df)),
                         "Partidos",
                         "#f472b6",
-                        [20, 40, 60, 80, 100, len(df)],
+                        None,
                         f"{len(df)} totales",
                     ),
                     (
                         str(total_goals),
                         "Goles",
                         "#22d3ee",
-                        [50, 120, 200, 280, 320, total_goals],
+                        None,
                         f"{total_goals / len(df):.1f} por partido",
                     ),
                 ]
@@ -784,7 +784,8 @@ def worldcup_tab():
                         ),
                         insight_card(
                             "¿Metodología?",
-                            "SQLite + 16 queries + RandomForest con CV + reportes reproducibles.",
+                            "SQLite + consultas analíticas en queries.py + reportes reproducibles "
+                            "(todo vive en el repo worldcup-2026).",
                             "#a78bfa",
                         ),
                         insight_card(
@@ -796,7 +797,7 @@ def worldcup_tab():
                 ),
             ),
             card(
-                "Análisis de Goles — cross-filtering activo",
+                "Análisis de Goles",
                 html.Div(
                     [
                         dcc.Graph(id="worldcup-goals-hist", figure=fig),
@@ -816,11 +817,9 @@ def games_tab():
     if "games" not in data:
         return card("Videojuegos", html.P("Data not available"))
     df = data["games"]
-    fig = px.pie(
-        df, names="source", title="Distribución por Plataforma — clic para filtrar"
-    )
+    fig = px.pie(df, names="source", title="Distribución por Plataforma")
     fig.update_traces(
-        hovertemplate="<b>%{label}</b><br>Juegos: %{value}<br>%{percent}<extra>Clic para filtrar</extra>",
+        hovertemplate="<b>%{label}</b><br>Juegos: %{value}<br>%{percent}<extra></extra>",
     )
     fig.update_layout(**CHART_TEMPLATE, height=400)
     return html.Div(
@@ -857,11 +856,11 @@ def nlp_tab():
         df,
         x="year",
         y="speaker",
-        title="Discursos Presidenciales — clic un punto para filtrar",
+        title="Discursos Presidenciales por año",
     )
     fig.update_traces(
         marker=dict(size=10),
-        hovertemplate="Año: %{x}<br>%{y}<extra>Clic para filtrar</extra>",
+        hovertemplate="Año: %{x}<br>%{y}<extra></extra>",
     )
     fig.update_layout(**CHART_TEMPLATE, height=500)
     return html.Div(
@@ -927,7 +926,7 @@ def geo_tab():
                 ]
             ),
             card(
-                "Evolución Demográfica — clic una serie para filtrar",
+                "Evolución Demográfica",
                 html.Div(
                     [
                         dcc.Graph(id="m-geo-line", figure=fig),
@@ -1015,13 +1014,13 @@ def sanit_tab():
     fig_bar = px.bar(
         x=tipo_counts.index,
         y=tipo_counts.values,
-        title="Ubicaciones por Tipo — clic para filtrar",
+        title="Ubicaciones por Tipo",
         labels={"x": "Tipo", "y": "Cantidad"},
         color=tipo_counts.index,
         color_discrete_sequence=["#56B4E9", "#E69F00", "#009E73", "#F0E442", "#CC79A7"],
     )
     fig_bar.update_traces(
-        hovertemplate="<b>%{x}</b><br>Puntos: %{y}<extra>Clic para filtrar</extra>",
+        hovertemplate="<b>%{x}</b><br>Puntos: %{y}<extra></extra>",
     )
     fig_bar.update_layout(**CHART_TEMPLATE, height=400, showlegend=False)
     return html.Div(
@@ -1061,7 +1060,11 @@ def sanit_tab():
 def m_games_crossfilter(click):
     if not click:
         return no_update
-    return f"Plataforma: {click['points'][0].get('label', '?')} — ver drill-down en el repo chilean-videogames-analysis."
+    label = click["points"][0].get("label", "?")
+    return (
+        f"Plataforma: {label}. Este hub no filtra datos: el detalle está en el repo "
+        "chilean-videogames-analysis."
+    )
 
 
 @callback(
@@ -1073,7 +1076,10 @@ def m_nlp_crossfilter(click):
     if not click:
         return no_update
     pt = click["points"][0]
-    return f"Discurso: {pt.get('y', '?')} ({pt.get('x', '?')}) — ver drill-down en geopolitica-textual-nlp."
+    return (
+        f"Discurso: {pt.get('y', '?')} ({pt.get('x', '?')}). Este hub no filtra datos: "
+        "el detalle está en el repo geopolitica-textual-nlp."
+    )
 
 
 @callback(
@@ -1085,7 +1091,11 @@ def m_geo_crossfilter(click):
     if not click:
         return no_update
     pt = click["points"][0]
-    return f"Serie: {pt.get('legendgroup', pt.get('curveNumber', '?'))} año {pt.get('x', '?')} — ver drill-down en chile-geografia-historica."
+    serie = pt.get("legendgroup", pt.get("curveNumber", "?"))
+    return (
+        f"Serie: {serie} año {pt.get('x', '?')}. Este hub no filtra datos: "
+        "el detalle está en el repo chile-geografia-historica."
+    )
 
 
 @callback(
@@ -1096,7 +1106,11 @@ def m_geo_crossfilter(click):
 def m_sanit_crossfilter(click):
     if not click:
         return no_update
-    return f"Tipo: {click['points'][0].get('x', '?')} — ver drill-down en sanitizacion-santiago."
+    tipo = click["points"][0].get("x", "?")
+    return (
+        f"Tipo: {tipo}. Este hub no filtra datos: el detalle está en el repo "
+        "sanitizacion-santiago."
+    )
 
 
 if __name__ == "__main__":
