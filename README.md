@@ -25,8 +25,9 @@ muestra `n/d` en lugar de inventar un número.
 
 Salida del segundo comando: `wc_matches` 104, `wc_teams` 48, `games` 170, `speeches` 20,
 `census` 42, `events` 24, `presidents` 41, `cajas` 80,595, `sanit` no cargado (archivo
-ausente). Las cifras cambian si cambian los archivos de los repos hermanos: no están
-escritas en este README ni en el código.
+ausente). Las cifras se recalculan en cada arranque desde los archivos de los repos
+hermanos; las tablas de este README son instantáneas del 2026-10-20 y pueden quedar
+desfasadas si esos archivos cambian.
 
 ## Qué es
 
