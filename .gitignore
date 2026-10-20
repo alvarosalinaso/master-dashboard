@@ -4,5 +4,6 @@
 data/export/
 *.egg-info/
 .pytest_cache/
+docs/superpowers/
 serve8090.py
 serve*.py
