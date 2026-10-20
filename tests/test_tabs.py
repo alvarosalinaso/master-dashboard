@@ -15,10 +15,14 @@ from app import (
 
 
 def test_overview_tab():
-    """Test overview_tab returns valid structure."""
-    overview_tab()
-    assert "Proyectos Destacados" in str(overview_tab())
-    assert "7" in str(overview_tab())  # 7 projects
+    """Test overview_tab returns valid structure with computed KPIs."""
+    html_out = str(overview_tab())
+    assert "Proyectos Destacados" in html_out
+    assert "Juegos analizados" in html_out
+    assert "n/d = dataset no disponible" in html_out
+    # Cifras antiguas hardcodeadas ya no aparecen.
+    assert "150+" not in html_out
+    assert "100% validados" not in html_out
 
 
 def test_worldcup_tab_no_data():

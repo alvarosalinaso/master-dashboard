@@ -227,6 +227,64 @@ PRESIDENTS_CSV = (
 CAJAS_CSV = BASE / "cajas-alimentacion" / "data" / "raw" / "coordinates.csv"
 SANIT_CSV = BASE / "sanitizacion-santiago" / "data" / "raw" / "sanitization_points.csv"
 
+# Índice de navegación: cada tab apunta al repo hermano del que lee sus datos.
+PROJECTS: list[dict[str, Any]] = [
+    {
+        "tab": "worldcup",
+        "name": "World Cup 2026",
+        "icon": "⚽",
+        "color": "#22d3ee",
+        "desc": "Dashboard comparativo de Mundiales",
+        "source_repo": "worldcup-2026",
+    },
+    {
+        "tab": "games",
+        "name": "Videojuegos Chile",
+        "icon": "🎮",
+        "color": "#f472b6",
+        "desc": "ETL + clustering de juegos",
+        "desc_count": "ETL + clustering de {n} juegos",
+        "count_key": "games",
+        "source_repo": "chilean-videogames-analysis",
+    },
+    {
+        "tab": "nlp",
+        "name": "Discurso NLP",
+        "icon": "📜",
+        "color": "#fbbf24",
+        "desc": "NER + sentimiento presidencial",
+        "source_repo": "geopolitica-textual-nlp",
+    },
+    {
+        "tab": "geo",
+        "name": "Geografía Chile",
+        "icon": "🗺️",
+        "color": "#34d399",
+        "desc": "Censos + eventos + presidentes",
+        "source_repo": "chile-geografia-historica",
+    },
+    {
+        "tab": "cajas",
+        "name": "Cajas Alimentación",
+        "icon": "📦",
+        "color": "#a78bfa",
+        "desc": "Puntos de entrega de cajas",
+        "desc_count": "{n} puntos de entrega",
+        "count_key": "cajas",
+        "source_repo": "cajas-alimentacion",
+    },
+    {
+        "tab": "sanit",
+        "name": "Sanitización Santiago",
+        "icon": "🧹",
+        "color": "#54a0ff",
+        "desc": "Puntos de sanitización comunal (datos no disponibles)",
+        "desc_count": "{n} puntos de sanitización comunal",
+        "count_key": "sanit",
+        "source_repo": "sanitizacion-santiago",
+    },
+]
+
 
 def load_data() -> dict[str, Any]:
     data = {}
@@ -262,6 +320,39 @@ def get_data() -> dict[str, Any]:
     if _DATA is None:
         _DATA = load_data()
     return _DATA
+
+
+def overview_kpis() -> dict[str, int | None]:
+    """Cifras del tab Resumen, derivadas de load_data(). None = dataset no disponible."""
+    data = get_data()
+
+    def rows(key: str) -> int | None:
+        frame = data.get(key)
+        return None if frame is None else len(frame)
+
+    return {
+        "projects": len(PROJECTS),
+        "games": rows("games"),
+        "speeches": rows("speeches"),
+        "cajas_points": rows("cajas"),
+        "sanit_points": rows("sanit"),
+    }
+
+
+def kpi_value(value: int | None) -> str:
+    """Renderiza un KPI: miles con coma o n/d si el dataset no está disponible."""
+    return "n/d" if value is None else f"{value:,}"
+
+
+def project_desc(project: dict[str, Any]) -> str:
+    """Descripción del proyecto; usa el recuento real cuando hay datos en disco."""
+    template = project.get("desc_count")
+    if template is None:
+        return str(project["desc"])
+    frame = get_data().get(str(project.get("count_key")))
+    if frame is None:
+        return str(project["desc"])
+    return template.format(n=f"{len(frame):,}")
 
 
 # ── Layout ────────────────────────────────────────────────────────────────────
@@ -525,84 +616,29 @@ def worldcup_crossfilter(click):
 
 
 def overview_tab():
-    projects = [
-        {
-            "name": "World Cup 2026",
-            "desc": "Dashboard comparativo de Mundiales",
-            "icon": "⚽",
-            "color": "#22d3ee",
-            "tab": "worldcup",
-        },
-        {
-            "name": "Videojuegos Chile",
-            "desc": "ETL + clustering de 150 juegos",
-            "icon": "🎮",
-            "color": "#f472b6",
-            "tab": "games",
-        },
-        {
-            "name": "Discurso NLP",
-            "desc": "NER + sentimiento presidencial",
-            "icon": "📜",
-            "color": "#fbbf24",
-            "tab": "nlp",
-        },
-        {
-            "name": "Geografía Chile",
-            "desc": "Censos + eventos + presidentes",
-            "icon": "🗺️",
-            "color": "#34d399",
-            "tab": "geo",
-        },
-        {
-            "name": "Cajas Alimentación",
-            "desc": "80,595 puntos de entrega",
-            "icon": "📦",
-            "color": "#a78bfa",
-            "tab": "cajas",
-        },
-        {
-            "name": "Sanitización Santiago",
-            "desc": "87 puntos de sanitización comunal",
-            "icon": "🧹",
-            "color": "#54a0ff",
-            "tab": "sanit",
-        },
-    ]
+    kpis = overview_kpis()
+    projects = [{**p, "desc": project_desc(p)} for p in PROJECTS]
     return html.Div(
         [
             stat_row(
                 [
-                    ("7", "Proyectos", "#22d3ee", [3, 4, 5, 6, 7, 7, 7], "+2 este año"),
-                    (
-                        "80,595",
-                        "Puntos georeferenciados",
-                        "#54a0ff",
-                        [20, 35, 50, 65, 75, 80, 80],
-                        "+12% cobertura",
-                    ),
-                    (
-                        "150+",
-                        "Juegos analizados",
-                        "#fbbf24",
-                        [40, 70, 95, 120, 140, 150, 150],
-                        "+18 títulos",
-                    ),
-                    (
-                        "16",
-                        "Discursos NLP",
-                        "#34d399",
-                        [4, 7, 10, 12, 14, 16, 16],
-                        "1832–2022",
-                    ),
-                    (
-                        "87",
-                        "Puntos sanitización",
-                        "#f472b6",
-                        [10, 30, 55, 70, 80, 87, 87],
-                        "100% validados",
-                    ),
+                    (kpi_value(kpis["projects"]), "Proyectos", "#22d3ee"),
+                    (kpi_value(kpis["games"]), "Juegos analizados", "#fbbf24"),
+                    (kpi_value(kpis["speeches"]), "Discursos NLP", "#34d399"),
+                    (kpi_value(kpis["cajas_points"]), "Puntos de entrega", "#54a0ff"),
+                    (kpi_value(kpis["sanit_points"]), "Puntos sanitización", "#f472b6"),
                 ]
+            ),
+            html.Div(
+                "n/d = dataset no disponible en disco (archivo ausente o ilegible); "
+                "el resto de los KPIs se recalcula al iniciar la app desde load_data().",
+                style={
+                    "color": COLORS["muted"],
+                    "fontSize": "0.75rem",
+                    "fontFamily": FONT_DATA,
+                    "marginTop": "-14px",
+                    "marginBottom": "22px",
+                },
             ),
             card(
                 "Key Findings & Insights — Para Evaluadores",
@@ -610,17 +646,21 @@ def overview_tab():
                     [
                         insight_card(
                             "¿Qué problema resuelve?",
-                            "Portafolio fragmentado en 7 repos. Este hub unifica métricas ejecutivas con drill-down por proyecto para decisiones rápidas de contratación.",
+                            f"Portafolio repartido en {len(PROJECTS)} proyectos más este hub. "
+                            "Este tab reúne sus cifras en una sola pantalla para compararlas rápido.",
                             "#22d3ee",
                         ),
                         insight_card(
                             "¿Metodología?",
-                            "ETL reproducible + tests pytest + CI con coverage + deploys Render con gunicorn. Datos reales georeferenciados y scraping auditado.",
+                            "Los datos no se copian aquí: cada tab lee el CSV/DB de su repo hermano "
+                            "con rutas relativas. Tests con pytest y CI con ruff + pytest en GitHub "
+                            "Actions; infraestructura Docker con gunicorn (infra/).",
                             "#a78bfa",
                         ),
                         insight_card(
                             "¿Qué decisión habilita?",
-                            "Comparar impacto por dominio (deporte, mercado indie, NLP histórico, geoespacial) en 30 segundos y profundizar solo donde hay fit.",
+                            "Comparar cobertura por dominio (deporte, mercado indie, NLP histórico, "
+                            "geoespacial) y decidir en qué proyecto profundizar abriendo su tab.",
                             "#34d399",
                         ),
                     ]
