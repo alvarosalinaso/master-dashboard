@@ -1,6 +1,6 @@
-# master-dashboard — hub del portafolio
+# master-dashboard, hub del portafolio
 
-**Hallazgo (auditoría 2026-10):** este repo no tenía README, y los KPIs del tab *Resumen*
+**Hallazgo (revisión 2026-10):** este repo no tenía README, y los KPIs del tab *Resumen*
 estaban escritos a mano en `app.py` (7 proyectos, 150+ juegos) mientras los datos reales
 daban 6 y 170. Hoy todas las cifras del *Resumen* salen de
 `load_data()` (función `overview_kpis()`); si un dataset no está disponible, la tarjeta
@@ -40,7 +40,7 @@ lee los CSV/DB que ya viven en los repos hermanos y los presenta en una sola pan
 
 | Tab | Repo fuente (hermano de este repo) | Archivo leído |
 | --- | --- | --- |
-| Resumen | este repo | — (agrega los 4 proyectos) |
+| Resumen | este repo | no aplica (agrega los 4 proyectos) |
 | World Cup 2026 | `worldcup-2026` | `data/worldcup.db` (tablas `matches`, `teams`) |
 | Videojuegos Chile | `chilean-videogames-analysis` | `data/processed/games.csv` |
 | Discurso NLP | `geopolitica-textual-nlp` | `data/processed/speeches.csv` |
@@ -114,7 +114,7 @@ Despliegue con Docker (hub en `:8080`, 8 servicios): ver [infra/README.md](infra
 
 ## Estructura
 
-- `app.py` — la app Dash (layout, tabs, callbacks, `load_data()`).
-- `tests/` — pytest: helpers, KPIs derivados de datos, degradación de carga, tabs.
-- `infra/` — `docker-compose.yml` (8 servicios), `nginx.conf`, `Dockerfile.base`.
-- `ARCHITECTURE.md` — arquitectura real y flujo de datos.
+- `app.py`, la app Dash (layout, tabs, callbacks, `load_data()`).
+- `tests/`, pytest: helpers, KPIs derivados de datos, degradación de carga, tabs.
+- `infra/`, `docker-compose.yml` (8 servicios), `nginx.conf`, `Dockerfile.base`.
+- `ARCHITECTURE.md`, arquitectura real y flujo de datos.

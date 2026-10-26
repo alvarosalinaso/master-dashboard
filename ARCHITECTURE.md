@@ -1,4 +1,4 @@
-# Arquitectura — master-dashboard
+# Arquitectura, master-dashboard
 
 ## Visión general
 
@@ -9,7 +9,7 @@ que ya viven en otros repos.
 
 ## Datos
 
-- `BASE = Path(__file__).parent.parent` — el directorio padre del repo (no es un
+- `BASE = Path(__file__).parent.parent`, el directorio padre del repo (no es un
   repositorio git) contiene los proyectos hermanos, y desde ahí se resuelven las rutas.
 - `load_data()` lee 7 datasets de 4 repos:
   | Repo hermano | Archivo | Claves en `data` |
@@ -27,30 +27,30 @@ que ya viven en otros repos.
 ## Componentes
 
 ### `app.py`
-- `PROJECTS` — índice de navegación: tab, nombre, colores y repo fuente de cada proyecto.
-- `overview_kpis()` / `kpi_value()` / `project_desc()` — cifras del tab *Resumen* y de las
+- `PROJECTS`, índice de navegación: tab, nombre, colores y repo fuente de cada proyecto.
+- `overview_kpis()` / `kpi_value()` / `project_desc()`, cifras del tab *Resumen* y de las
   tarjetas, derivadas siempre de `load_data()` (sin números hardcodeados).
 - Layout: encabezado, `dcc.Tabs` (5 tabs) y contenedor `tab-content`.
 - Callbacks (6 en total):
-  - `render_tab` — dibuja el tab activo.
-  - `project_open_tab` — clic en una tarjeta → abre su tab (navegación real).
+  - `render_tab`, dibuja el tab activo.
+  - `project_open_tab`, clic en una tarjeta → abre su tab (navegación real).
   - 4 callbacks de clic en gráficos (`worldcup`, `games`, `nlp`, `geo`) que
     **solo informan** y declaran que el hub no filtra; el detalle vive en el repo fuente.
 - Helpers de UI: `card`, `stat_row`, `kpi_card`, `insight_card`, `sparkline`.
 
 ### `infra/`
-- `docker-compose.yml` — 8 servicios (`nginx` + `master-dashboard` + 6 apps) en red
+- `docker-compose.yml`, 8 servicios (`nginx` + `master-dashboard` + 6 apps) en red
   `analytics-network`, con rutas relativas (`../../<proyecto>`).
-- `nginx.conf` — hub en `:8080` y redirects a `:8050`–`:8056`.
+- `nginx.conf`, hub en `:8080` y redirects a `:8050`–`:8056`.
 - `Dockerfile.base`, `requirements.analytics.txt`, `UX-MATRIX.md`.
 - Ver [infra/README.md](infra/README.md).
 
 ### `tests/`
-- `test_helpers.py` — `card`, `stat_row`, `COLORS`.
-- `test_kpis.py` — los KPIs salen de los datos (anti-hardcoding) y degradan a `n/d`.
-- `test_load_data.py` — un CSV corrupto/ausente no rompe la carga.
-- `test_smoke.py` — la app importa, `GET /` responde 200 y hay 6 callbacks registrados.
-- `test_tabs.py` — cada tab con y sin datos.
+- `test_helpers.py`, `card`, `stat_row`, `COLORS`.
+- `test_kpis.py`, los KPIs salen de los datos (anti-hardcoding) y degradan a `n/d`.
+- `test_load_data.py`, un CSV corrupto/ausente no rompe la carga.
+- `test_smoke.py`, la app importa, `GET /` responde 200 y hay 6 callbacks registrados.
+- `test_tabs.py`, cada tab con y sin datos.
 
 ## Flujo de datos
 
@@ -63,8 +63,8 @@ repos hermanos (CSV/DB) → load_data() (try/except por dataset) → get_data() 
 
 `.github/workflows/ci.yml`:
 
-- **lint** — `ruff check` + `ruff format --check` en Python 3.12.
-- **test** — `pytest` en 3.10 / 3.11 / 3.12 con `pytest-cov` y subida de `coverage.xml`.
+- **lint**, `ruff check` + `ruff format --check` en Python 3.12.
+- **test**, `pytest` en 3.10 / 3.11 / 3.12 con `pytest-cov` y subida de `coverage.xml`.
 
 Nota: el paso corre `--cov=src` pero este repo no tiene paquete `src`, así que el
 reporte de coverage no mide `app.py` (ajuste pendiente; no afecta a ruff ni a pytest).

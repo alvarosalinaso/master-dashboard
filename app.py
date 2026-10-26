@@ -1,4 +1,4 @@
-"""Master Dashboard — Todos los proyectos de Álvaro Salinas."""
+"""Master Dashboard, Todos los proyectos de Álvaro Salinas."""
 
 import logging
 import sqlite3
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 app = dash.Dash(
     __name__,
-    title="Álvaro Salinas — Data Portfolio",
+    title="Álvaro Salinas, Data Portfolio",
     meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
 )
 server = app.server
@@ -390,7 +390,7 @@ app.layout = html.Div(
                     },
                 ),
                 html.P(
-                    "Data Analyst — Python · SQL · NLP · Dashboards",
+                    "Data Analyst, Python · SQL · NLP · Dashboards",
                     style={
                         "color": "#8b94a3",
                         "marginTop": "10px",
@@ -617,7 +617,7 @@ def overview_tab():
                 },
             ),
             card(
-                "Key Findings & Insights — Para Evaluadores",
+                "Key Findings & Insights, Para Evaluadores",
                 html.Div(
                     [
                         insight_card(
@@ -643,7 +643,7 @@ def overview_tab():
                 ),
             ),
             card(
-                "Proyectos Destacados — clic para abrir su tab",
+                "Proyectos Destacados, clic para abrir su tab",
                 html.Div(
                     [
                         html.Div(
@@ -742,7 +742,7 @@ def worldcup_tab():
                 ]
             ),
             card(
-                "Key Insights — World Cup",
+                "Key Insights, World Cup",
                 html.Div(
                     [
                         insight_card(
